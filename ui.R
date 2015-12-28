@@ -10,7 +10,9 @@ library(shiny)
 shinyUI(pageWithSidebar(
   
   # Application title
-  headerPanel("Old Faithful Geyser Data"),
+  headerPanel("Indicatori di Benchmarking regionale"),
+  
+  
   
   # Sidebar with a slider input for number of bins
   sidebarPanel(
@@ -24,6 +26,6 @@ shinyUI(pageWithSidebar(
   
   # Show a plot of the generated distribution
   mainPanel(
-    dataTableOutput("table")
+      tableOutput("table")
   )
 ))

@@ -10,9 +10,9 @@ source('functions.R')
 
 shinyServer(function(input, output) {
    
-  output$table <- renderDataTable({
-    
-    tab <- getData(input$key, '..TOTAL.ITH4.')
+  output$table <- renderTable({
+    geoFilter <- 'UKE2+ITH2'
+    tab <- displayTab(input$key, paste0('A.T.TOTAL.', geoFilter , '.'))
     tab
     
   })
