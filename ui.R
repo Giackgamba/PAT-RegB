@@ -14,18 +14,20 @@ shinyUI(pageWithSidebar(
   
   
   
-  # Sidebar with a slider input for number of bins
+  # Sidebar with a select input for indicator
   sidebarPanel(
     selectInput("key",
             "Nome indicatore:",
-            c('Superficie' = 'demo_r_d3area'
-              ,'Popolazione' = 'demo_r_d2jan'
+            c('Superficie' = 'demo_r_d3area',
+              'Popolazione' = 'demo_r_d2jan'#,
+              #'Tasso di attività' = 'edat_lfse_26'
               )
             )
   ),
   
-  # Show a plot of the generated distribution
+  # Show a time series table of the indicator
   mainPanel(
-      tableOutput("table")
+      tableOutput("table"),
+      plotOutput('plot')
   )
 ))

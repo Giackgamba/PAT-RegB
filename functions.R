@@ -1,8 +1,10 @@
 library(rsdmx)
 library(dplyr)
 library(tidyr)
+library(RODBC)
+source('password.R')
 
-
+## Get the concepts (filters) relative to the key DataFlow from EUROSTAT
 getConcepts <- function(key) {
     BaseUrl <- 'http://ec.europa.eu/eurostat/SDMX/diss-web/rest/datastructure/ESTAT/DSD_'
     DSDUrl <- paste0(BaseUrl, key)
@@ -11,6 +13,7 @@ getConcepts <- function(key) {
     return(concepts)
 }
 
+## Get the code list relative to the concept from EUROSTAT
 getCodeList <- function(key, concept) {
     BaseUrl <- 'http://ec.europa.eu/eurostat/SDMX/diss-web/rest/datastructure/ESTAT/DSD_'
     DSDUrl <- paste0(BaseUrl, key)
@@ -19,6 +22,7 @@ getCodeList <- function(key, concept) {
     return(codelist)
 }
 
+## Get the data, given the filter
 getData <- function(key, filter = NULL) {
     BaseUrl <- 'http://ec.europa.eu/eurostat/SDMX/diss-web/rest/data'
     if (is.null(filter)) {
@@ -30,25 +34,46 @@ getData <- function(key, filter = NULL) {
     return(data)
 }
 
+## Transform the data to have vertical year and horizontal Geo
 pivotData <- function(x) {
     if (all(c('GEO', 'obsTime', 'obsValue') %in% names(x))) {
         res <- x %>%
             select(GEO, obsTime, obsValue) %>%
-            spread(GEO, obsValue)
+            spread(GEO, obsValue) %>%
+            arrange(desc(obsTime))
         return(res)
     }
     else cat('c\'è stato qualche errore')
 }
 
+## Wrapper to and transform the data
 displayTab <- function(key, filter = NULL) {
     data <- getData(key, filter) %>%
         pivotData()
     return(data)
 }
 
+## Helper to obtain the string to insert (manually) in the DB
 getConceptsForSQL <- function(key) {
     lev <- levels(getConcepts(key)$id)
     a <- head(lev, -6) %>%
         paste(collapse = '.')
     return(a)
+}
+
+## Retrive the id starting from the name
+getSQLId <- function(key) {
+    conn <- myConnection()
+    id <- sqlQuery(conn, paste0('SELECT idDataFlow FROM tabIndicatori WHERE nome = \'', key,'\''), stringsAsFactors = F)
+    odbcClose(conn)
+    return(id)
+}
+
+## Retrive the filter values
+getFilters <- function(id) {
+    conn <- myConnection()
+    concepts <- sqlQuery(conn, paste0('SELECT value FROM tabConcepts WHERE idDataFlow = \'', id, '\''), stringsAsFactors = F)
+    filter <- paste0(unlist(concepts), collapse = '.')
+    odbcClose(conn)
+    return(filter)
 }

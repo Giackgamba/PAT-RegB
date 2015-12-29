@@ -9,12 +9,23 @@ library(shiny)
 source('functions.R')
 
 shinyServer(function(input, output) {
-   
-  output$table <- renderTable({
-    geoFilter <- 'UKE2+ITH2'
-    tab <- displayTab(input$key, paste0('A.T.TOTAL.', geoFilter , '.'))
-    tab
     
-  })
-  
+    
+    output$table <- renderTable({
+        id <- getSQLId(input$key)
+        geoFilter <- 'UKE2+ITH2'
+        filter <- getFilter(id)
+        tab <- displayTab(input$key, paste0(filter, '.', geoFilter , '.'))
+        tab
+    })
+    
+    output$plot <- renderPlot({
+        id <- getSQLId(input$key)
+        geoFilter <- 'UKE2+ITH2'
+        filter <- getFilter(id)
+        tab <- getData(input$key, paste0(filter, '.', geoFilter , '.'))
+        p <- ggplot(tab, aes(x = obsTime, y = obsValue, group = GEO, color = GEO))
+        p+geom_line()+theme_bw()
+        })
+    
 })
