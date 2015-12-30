@@ -7,30 +7,55 @@
 
 library(shiny)
 library(shinydashboard)
+source('functions.R')
+
+
+sectors <- getSectors()
 
 shinyUI(dashboardPage(
     
     # Application title
-    dashboardHeader(title = "Indicatori di Benchmarking regionale"),
+    dashboardHeader(title = "Benchmarking regionale",
+                    titleWidth = 300
+    ),
     
     
     
     # Sidebar with a select input for indicator
     dashboardSidebar(
-        selectInput("key",
-                    "Nome indicatore:",
-                    c('Superficie' = 'demo_r_d3area',
-                      'Popolazione' = 'demo_r_d2jan'#,
-                      #'Tasso di attività' = 'edat_lfse_26'
-                    )
+        width = 300,
+        selectInput("settore",
+                    "Settore:",
+                    sectors, 
+                    selected = 1
+        ),
+        
+        selectInput('ind',
+                    'Indicatore:',
+                    c('optionA' = 'A')
         )
+        
     ),
     
-    # Show a time series table of the indicator
+    # Show a time serie table of the indicator
     dashboardBody(
+        div(
+            fluidRow(
+                box(title = 'Serie Storica',
+                    color = 'green',
+                    width = 12,
+                    dataTableOutput("table")
+                )
+            )
+        ),
         fluidRow(
-            box(tableOutput("table")),
-            box(plotOutput('plot'))
+            box(title = 'Grafico',
+                solidHeader = TRUE,
+                status = 'primary',
+                plotOutput('plot')
+            ),
+            valueBoxOutput('belowBox'),
+            valueBoxOutput('overBox')
         )
     )
 ))

@@ -8,24 +8,61 @@
 library(shiny)
 source('functions.R')
 
-shinyServer(function(input, output) {
+
+shinyServer(function(input, output, clientData, session) {
     
-    
-    output$table <- renderTable({
-        id <- getSQLId(input$key)
-        geoFilter <- 'UKE2+ITH2'
-        filter <- getFilter(id)
-        tab <- displayTab(input$key, paste0(filter, '.', geoFilter , '.'))
-        tab
+    sectors <- getSectors()
+    geoFilter <- getGEOFilters()
+    indicators <- reactive({ 
+        getIndicators(input$settore) 
     })
     
+    observeEvent(input$settore, 
+                 ({ 
+                     updateSelectInput(session, 'ind', choices = indicators()) 
+                 })
+    )
+    
+    id <- reactive({ 
+        getSQLId(input$ind) 
+    })
+    
+    conceptFilter <- reactive({
+        getFilters(id()) 
+    })
+    
+    filter <- reactive({ 
+        paste0(conceptFilter(), '.', geoFilter, '.') 
+    })
+    
+    data <- reactive({ 
+        getData(input$ind, filter()) 
+    })
+    
+    output$table <- renderDataTable(
+        ({
+            data <- data()
+            tab <- pivotData(data)
+            tab
+        }), 
+        options = list(
+            paging = FALSE,
+            searching = FALSE
+            )
+    )
+    
     output$plot <- renderPlot({
-        id <- getSQLId(input$key)
-        geoFilter <- 'UKE2+ITH2'
-        filter <- getFilter(id)
-        tab <- getData(input$key, paste0(filter, '.', geoFilter , '.'))
-        p <- ggplot(tab, aes(x = obsTime, y = obsValue, group = GEO, color = GEO))
-        p+geom_line()+theme_bw()
-        })
+        data <- data()
+        p <- ggplot(data, aes(x = obsTime, y = obsValue, group = GEO, color = GEO))
+        p+geom_line()+theme_minimal()
+    })
+    
+    output$belowBox <- renderValueBox({
+        valueBox(4, ' Regioni sotto PAT', color = 'green')
+    })
+    
+    output$overBox <- renderValueBox({
+        valueBox(7, ' Regioni sopra PAT', color = 'red')
+    })
     
 })

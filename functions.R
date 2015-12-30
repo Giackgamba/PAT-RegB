@@ -2,6 +2,7 @@ library(rsdmx)
 library(dplyr)
 library(tidyr)
 library(RODBC)
+library(ggplot2)
 source('password.R')
 
 ## Get the concepts (filters) relative to the key DataFlow from EUROSTAT
@@ -46,7 +47,7 @@ pivotData <- function(x) {
     else cat('c\'è stato qualche errore')
 }
 
-## Wrapper to and transform the data
+## Wrapper to get and transform the data
 displayTab <- function(key, filter = NULL) {
     data <- getData(key, filter) %>%
         pivotData()
@@ -76,4 +77,40 @@ getFilters <- function(id) {
     filter <- paste0(unlist(concepts), collapse = '.')
     odbcClose(conn)
     return(filter)
+}
+
+## Retive sector (fixed)
+
+getSectors <- function() {
+    conn <- myConnection()
+    sectors <- sqlQuery(conn, 'SELECT descriz, idSettore FROM tabSettori', stringsAsFactors = F)
+    odbcClose(conn)
+    options <- list()
+    for (i in 1:nrow(sectors)) {
+        options[[as.character(sectors$descriz[i])]] <- sectors$idSettore[i]
+    }
+    
+    return(options)
+}
+
+getGEOFilters <- function() {
+    conn <- myConnection()
+    filters <- sqlQuery(conn, 'SELECT id FROM tabNUTS', stringsAsFactors = F) %>%
+        unlist() %>%
+        paste0(collapse = '+')
+    odbcClose(conn)
+    return(filters)
+}
+
+getIndicators <- function(idSector) {
+    conn <- myConnection()
+    indicators <- sqlQuery(conn, paste0('SELECT * FROM tabIndicatori WHERE idSettore=', idSector), stringsAsFactors = F)
+    odbcClose(conn)
+    
+    options <- list()
+    for (i in 1:nrow(indicators)) {
+        options[[as.character(indicators$descriz[i])]] <- indicators$nome[i]
+    }
+#     options[[as.character(indicators$descriz)]] <- indicators$nome
+    return(options)
 }
