@@ -13,11 +13,6 @@ Source: CRAN
 Version: 0.3.1
 Hash: 096699d1ac1cf530acfc646a0c90ee5d
 
-Package: MASS
-Source: CRAN
-Version: 7.3-45
-Hash: 0650d5701aa7e369e77c9e2c8e1dc913
-
 Package: R6
 Source: CRAN
 Version: 2.1.1
@@ -84,7 +79,7 @@ Package: ggplot2
 Source: CRAN
 Version: 2.0.0
 Hash: 5befb1e7a9c7d0692d6c35fa02a29dbf
-Requires: MASS, digest, gtable, plyr, scales, reshape2
+Requires: digest, gtable, plyr, scales, reshape2
 
 Package: gtable
 Source: CRAN
@@ -190,7 +185,7 @@ Package: tidyr
 Source: CRAN
 Version: 0.3.1
 Hash: 1606e7bf29585ceb6ae1c309d8695793
-Requires: Rcpp, dplyr, lazyeval, magrittr, stringi
+Requires: Rcpp, lazyeval, magrittr, stringi, dplyr
 
 Package: xtable
 Source: CRAN

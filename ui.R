@@ -52,8 +52,11 @@ shinyUI(dashboardPage(
             box(title = 'Grafico',
                 solidHeader = TRUE,
                 status = 'primary',
+                width = 12,
                 plotOutput('plot')
-            ),
+            )
+        ),
+        fluidRow(
             valueBoxOutput('belowBox'),
             valueBoxOutput('overBox')
         )

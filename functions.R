@@ -3,6 +3,7 @@ library(dplyr)
 library(tidyr)
 library(RODBC)
 library(ggplot2)
+
 source('password.R')
 
 ## Get the concepts (filters) relative to the key DataFlow from EUROSTAT
@@ -29,7 +30,7 @@ getData <- function(key, filter = NULL) {
     if (is.null(filter)) {
         nFilter <- nrow(getConcepts(key)) - 4
         filter <- paste(rep('.', nFilter - 1), collapse = '')
-        }
+    }
     dataUrl <- paste(BaseUrl, key, filter, sep ='/')
     data <- as.data.frame(readSDMX(dataUrl))
     return(data)
@@ -111,6 +112,13 @@ getIndicators <- function(idSector) {
     for (i in 1:nrow(indicators)) {
         options[[as.character(indicators$descriz[i])]] <- indicators$nome[i]
     }
-#     options[[as.character(indicators$descriz)]] <- indicators$nome
+    #     options[[as.character(indicators$descriz)]] <- indicators$nome
     return(options)
+}
+
+makePlot <- function(data) {
+    if (all(c('GEO', 'obsTime', 'obsValue') %in% names(data))) {
+        p <- ggplot(data, aes(x = obsTime, y = obsValue, group = GEO, color = GEO)) + geom_smooth(size = 1) + theme_minimal() + theme(axis.text.x = element_text(angle = 45))
+        return(p)
+    }
 }

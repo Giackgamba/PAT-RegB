@@ -39,30 +39,33 @@ shinyServer(function(input, output, clientData, session) {
         getData(input$ind, filter()) 
     })
     
-    output$table <- renderDataTable(
-        ({
-            data <- data()
-            tab <- pivotData(data)
-            tab
-        }), 
-        options = list(
-            paging = FALSE,
-            searching = FALSE
-            )
+    observeEvent(input$ind,
+                 output$table <- renderDataTable(
+                     ({
+                         data <- data()
+                         tab <- pivotData(data)
+                         tab
+                     }), 
+                     options = list(
+                         searching = FALSE,
+                         pageLength = 10
+                     )
+                 )
     )
     
-    output$plot <- renderPlot({
-        data <- data()
-        p <- ggplot(data, aes(x = obsTime, y = obsValue, group = GEO, color = GEO))
-        p+geom_line()+theme_minimal()
-    })
+    observeEvent(input$ind,
+                 output$plot <- renderPlot({
+                     data <- data()
+                     makePlot(data)
+                 })
+    )
     
     output$belowBox <- renderValueBox({
-        valueBox(4, ' Regioni sotto PAT', color = 'green')
+        valueBox(4, ' Regioni sotto PAT', color = 'green', icon = icon('thumbs-down'))
     })
     
     output$overBox <- renderValueBox({
-        valueBox(7, ' Regioni sopra PAT', color = 'red')
+        valueBox(7, ' Regioni sopra PAT', color = 'red', icon = icon('thumbs-up'))
     })
     
 })
