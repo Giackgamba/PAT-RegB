@@ -6,6 +6,7 @@
 #
 
 library(shiny)
+
 source('functions.R')
 
 
@@ -54,10 +55,14 @@ shinyServer(function(input, output, clientData, session) {
     )
     
     observeEvent(input$ind,
-                 output$plot <- renderPlot({
-                     data <- data()
-                     makePlot(data)
-                 })
+                 output$plot <- renderDygraph(
+                     ({
+                         
+                         data <- data()
+                         p <- makeInteractivePlot(data)
+                         p
+                     })
+                 )
     )
     
     output$belowBox <- renderValueBox({

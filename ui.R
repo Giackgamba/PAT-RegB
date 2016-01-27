@@ -53,7 +53,7 @@ shinyUI(dashboardPage(
                 solidHeader = TRUE,
                 status = 'primary',
                 width = 12,
-                plotOutput('plot')
+                dygraphOutput('plot')
             )
         ),
         fluidRow(

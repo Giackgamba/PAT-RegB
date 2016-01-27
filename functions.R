@@ -3,6 +3,9 @@ library(dplyr)
 library(tidyr)
 library(RODBC)
 library(ggplot2)
+library(zoo)
+library(xts)
+library(dygraphs)
 
 source('password.R')
 
@@ -121,4 +124,24 @@ makePlot <- function(data) {
         p <- ggplot(data, aes(x = obsTime, y = obsValue, group = GEO, color = GEO)) + geom_smooth(size = 1) + theme_minimal() + theme(axis.text.x = element_text(angle = 45))
         return(p)
     }
+}
+
+makeInteractivePlot <- function(data) {
+    
+    obsTime <- unique(data$obsTime)
+    obsTime <- as.Date(obsTime, format = '%Y')
+    
+    dataTs <- data %>%
+        select(GEO, obsTime, obsValue) %>%
+        spread(GEO, obsValue) %>%
+        select(-obsTime)
+    
+    dataTs <- xts(dataTs, order.by = obsTime, frequency = 1)
+    
+    p <- dygraph(dataTs) %>% 
+        dyRangeSelector() %>%
+        dyHighlight(highlightCircleSize = 5, 
+                    highlightSeriesBackgroundAlpha = 0.2,
+                    hideOnMouseOut = FALSE)
+    return(p)
 }
