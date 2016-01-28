@@ -2,10 +2,9 @@ library(rsdmx)
 library(dplyr)
 library(tidyr)
 library(RODBC)
-library(ggplot2)
-library(zoo)
-library(xts)
-library(dygraphs)
+library(DT)
+library(rCharts)
+
 
 source('password.R')
 
@@ -44,8 +43,9 @@ pivotData <- function(x) {
     if (all(c('GEO', 'obsTime', 'obsValue') %in% names(x))) {
         res <- x %>%
             select(GEO, obsTime, obsValue) %>%
-            spread(GEO, obsValue) %>%
-            arrange(desc(obsTime))
+            spread(obsTime, obsValue) %>%
+            .[,c(1,(ncol(.)-9):ncol(.))] %>%
+            arrange(GEO)
         return(res)
     }
     else cat('c\'è stato qualche errore')
@@ -127,21 +127,25 @@ makePlot <- function(data) {
 }
 
 makeInteractivePlot <- function(data) {
+    data <- select(data, GEO, obsValue, obsTime)
     
-    obsTime <- unique(data$obsTime)
-    obsTime <- as.Date(obsTime, format = '%Y')
+    p <- hPlot(obsValue ~ obsTime, 
+               data = data,
+               type = 'line',
+               group = 'GEO',
+               marker = list(enabled = 'false')
+    )
     
-    dataTs <- data %>%
-        select(GEO, obsTime, obsValue) %>%
-        spread(GEO, obsValue) %>%
-        select(-obsTime)
+    visible = c('ITH1','ITH2')
     
-    dataTs <- xts(dataTs, order.by = obsTime, frequency = 1)
-    
-    p <- dygraph(dataTs) %>% 
-        dyRangeSelector() %>%
-        dyHighlight(highlightCircleSize = 5, 
-                    highlightSeriesBackgroundAlpha = 0.2,
-                    hideOnMouseOut = FALSE)
+    # Black Magic
+    p$params$series = lapply(seq_along(p$params$series), function(i){
+        x = p$params$series[[i]]
+        x$visible = x$name %in% visible
+        return(x)
+    })
     return(p)
 }
+
+pobj <- makeInteractivePlot(data)
+pobj

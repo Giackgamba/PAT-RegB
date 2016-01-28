@@ -7,6 +7,7 @@
 
 library(shiny)
 library(shinydashboard)
+require(rCharts)
 source('functions.R')
 
 
@@ -53,7 +54,7 @@ shinyUI(dashboardPage(
                 solidHeader = TRUE,
                 status = 'primary',
                 width = 12,
-                dygraphOutput('plot')
+                showOutput('plot', 'Highcharts')
             )
         ),
         fluidRow(
