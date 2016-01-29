@@ -35,31 +35,30 @@ shinyUI(dashboardPage(
                     'Indicatore:',
                     c('optionA' = 'A')
         )
-        
     ),
     
     # Show a time serie table of the indicator
     dashboardBody(
-        div(
-            fluidRow(
-                box(title = 'Serie Storica',
-                    color = 'green',
-                    width = 12,
-                    dataTableOutput("table")
-                )
+        fluidRow(
+            box(title = 'Serie Storica',
+                color = 'green',
+                collapsible = T,
+                width = 12,
+                dataTableOutput("table")
             )
         ),
         fluidRow(
             box(title = 'Grafico',
-                solidHeader = TRUE,
-                status = 'primary',
                 width = 12,
+                collapsible = T,
                 showOutput('plot', 'Highcharts')
             )
         ),
         fluidRow(
             valueBoxOutput('belowBox'),
-            valueBoxOutput('overBox')
+            valueBoxOutput('infoBox'),
+            valueBoxOutput('overBox'),
+            collapsible = T
         )
     )
 ))

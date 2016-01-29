@@ -48,15 +48,8 @@ pivotData <- function(x) {
             arrange(GEO)
         return(res)
     }
-    else cat('c\'è stato qualche errore')
-}
+    else cat('c\'è stato qualche errore')}
 
-## Wrapper to get and transform the data
-displayTab <- function(key, filter = NULL) {
-    data <- getData(key, filter) %>%
-        pivotData()
-    return(data)
-}
 
 ## Helper to obtain the string to insert (manually) in the DB
 getConceptsForSQL <- function(key) {
@@ -119,14 +112,8 @@ getIndicators <- function(idSector) {
     return(options)
 }
 
-makePlot <- function(data) {
-    if (all(c('GEO', 'obsTime', 'obsValue') %in% names(data))) {
-        p <- ggplot(data, aes(x = obsTime, y = obsValue, group = GEO, color = GEO)) + geom_smooth(size = 1) + theme_minimal() + theme(axis.text.x = element_text(angle = 45))
-        return(p)
-    }
-}
 
-makeInteractivePlot <- function(data) {
+makeInteractivePlot <- function(data, selected) {
     data <- select(data, GEO, obsValue, obsTime)
     
     p <- hPlot(obsValue ~ obsTime, 
@@ -135,8 +122,9 @@ makeInteractivePlot <- function(data) {
                group = 'GEO',
                marker = list(enabled = 'false')
     )
+    cat(pivotData(data)[selected, 1])
     
-    visible = c('ITH1','ITH2')
+    visible = c('ITH1', 'ITH2')
     
     # Black Magic
     p$params$series = lapply(seq_along(p$params$series), function(i){
@@ -146,6 +134,3 @@ makeInteractivePlot <- function(data) {
     })
     return(p)
 }
-
-pobj <- makeInteractivePlot(data)
-pobj

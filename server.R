@@ -15,9 +15,12 @@ options(
         pageLength = 12,
         paging = F,
         processing = T,
-        language = list(info = ''),
+        language = list(
+            info = ''
+            ),
         columnDefs = list(
-            list(orderable = FALSE,
+            list(orderable = FALSE, 
+                 title = '',
                  targets = 12)
         )
     )
@@ -65,12 +68,13 @@ shinyServer(function(input, output, clientData, session) {
                         tab,
                         img = ifelse(
                             tab[, 11] > tab[, 10], 
-                            '<img src="images/uparrow137.svg"></img>', 
-                            '<img src="images/down103.svg"></img>'
+                            '<img src="uparrow137.svg" heihgt="20" width = "20"></img>', 
+                            '<img src="downarrow103.svg" heihgt="20" width = "20"></img>'
                         )
                     ),
-                    escape = FALSE
-                )
+                    escape = FALSE,
+                    options = list(selection = list(selected = 1))
+               )
             })
         )
     )
@@ -81,7 +85,7 @@ shinyServer(function(input, output, clientData, session) {
             ({
                 
                 data <- data()
-                p <- makeInteractivePlot(data)
+                p <- makeInteractivePlot(data, input$table_rows_selected)
                 p$addParams(dom = 'plot')
                 p$chart(zoomType = 'xy')
                 p$xAxis(title = 'Anno', rotation = 45)
@@ -97,6 +101,10 @@ shinyServer(function(input, output, clientData, session) {
     
     output$overBox <- renderValueBox({
         valueBox(7, ' Regioni sopra PAT', color = 'red', icon = icon('thumbs-up'))
+    })
+    
+    output$infoBox <- renderValueBox({
+        valueBox(7, ' Valore della PAT', color = 'yellow', icon = icon('newspaper-o'))
     })
     
 })
