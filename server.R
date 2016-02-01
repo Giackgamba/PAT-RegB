@@ -7,21 +7,20 @@
 
 library(shiny)
 require(rCharts)
+require(DT)
 source('functions.R')
 
 options(
     DT.options = list(
+        server = TRUE,
         searching = FALSE,
         pageLength = 12,
-        paging = F,
-        processing = T,
+        paging = FALSE,
+        processing = TRUE,
+        escape = TRUE,
+        rownames = F,
         language = list(
             info = ''
-            ),
-        columnDefs = list(
-            list(orderable = FALSE, 
-                 title = '',
-                 targets = 12)
         )
     )
 )
@@ -33,6 +32,17 @@ shinyServer(function(input, output, clientData, session) {
     indicators <- reactive({ 
         getIndicators(input$settore) 
     })
+    
+    
+    output$NUTS <- renderDataTable(datatable(
+        getGEO(),
+        escape = FALSE,
+        rownames = FALSE
+    )  %>%
+        formatStyle(columns = 1:3, 
+                    backgroundColor = '#222D32'
+        )
+    )
     
     observeEvent(
         input$settore, 
@@ -59,22 +69,24 @@ shinyServer(function(input, output, clientData, session) {
     
     observeEvent(
         input$ind,
-        output$table <- renderDataTable(
+        output$table <- DT::renderDataTable(
             ({
                 data <- data()
                 tab <- pivotData(data)
-                tab <- datatable(
-                    mutate(
-                        tab,
-                        img = ifelse(
-                            tab[, 11] > tab[, 10], 
-                            '<img src="uparrow137.svg" heihgt="20" width = "20"></img>', 
-                            '<img src="downarrow103.svg" heihgt="20" width = "20"></img>'
-                        )
-                    ),
-                    escape = FALSE,
-                    options = list(selection = list(selected = 1))
-               )
+                tab <- datatable(tab,
+                                 escape = FALSE,
+                                 rownames = FALSE,
+                                 selection = list(mode = 'multiple', 
+                                                  selected = c(5,6)
+                                 ),
+                                 options = list(
+                                     columnDefs = list(
+                                         list(orderable = FALSE, 
+                                              title = '',
+                                              targets = 11)
+                                     )
+                                 )
+                )
             })
         )
     )
@@ -83,28 +95,31 @@ shinyServer(function(input, output, clientData, session) {
         input$ind,
         output$plot <- renderChart2(
             ({
-                
                 data <- data()
                 p <- makeInteractivePlot(data, input$table_rows_selected)
                 p$addParams(dom = 'plot')
-                p$chart(zoomType = 'xy')
-                p$xAxis(title = 'Anno', rotation = 45)
-                p$yAxis(title = 'Valore', format = '{point.y:,.0f}')
+                
                 return(p)
             })
         )
     )
     
     output$belowBox <- renderValueBox({
-        valueBox(4, ' Regioni sotto PAT', color = 'green', icon = icon('thumbs-down'))
+        valueBox(4, ' Regioni sotto PAT', 
+                 color = 'green', 
+                 icon = icon('thumbs-down'))
     })
     
     output$overBox <- renderValueBox({
-        valueBox(7, ' Regioni sopra PAT', color = 'red', icon = icon('thumbs-up'))
+        valueBox(7, ' Regioni sopra PAT', 
+                 color = 'red', 
+                 icon = icon('thumbs-up'))
     })
     
     output$infoBox <- renderValueBox({
-        valueBox(7, ' Valore della PAT', color = 'yellow', icon = icon('newspaper-o'))
+        valueBox(7, ' Valore della PAT', 
+                 color = 'yellow', 
+                 icon = icon('newspaper-o'))
     })
     
 })

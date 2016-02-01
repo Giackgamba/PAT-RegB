@@ -34,7 +34,8 @@ shinyUI(dashboardPage(
         selectInput('ind',
                     'Indicatore:',
                     c('optionA' = 'A')
-        )
+        ),
+        dataTableOutput('NUTS')
     ),
     
     # Show a time serie table of the indicator
@@ -44,7 +45,7 @@ shinyUI(dashboardPage(
                 color = 'green',
                 collapsible = T,
                 width = 12,
-                dataTableOutput("table")
+                dataTableOutput('table')
             )
         ),
         fluidRow(
