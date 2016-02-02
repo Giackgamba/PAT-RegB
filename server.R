@@ -6,8 +6,10 @@
 #
 
 library(shiny)
-require(rCharts)
-require(DT)
+library(rCharts)
+library(DT)
+library(knitr)
+library(dplyr)
 source('functions.R')
 
 options(
@@ -122,4 +124,12 @@ shinyServer(function(input, output, clientData, session) {
                  icon = icon('newspaper-o'))
     })
     
+    output$textTitle <- renderText({
+        as.character(getIndName(input$ind))
+    })
+    
+    output$textTrento <- renderText({
+        data <- data()
+        makeText(data)
+    })
 })

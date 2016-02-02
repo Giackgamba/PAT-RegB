@@ -157,6 +157,19 @@ getIndicators <- function(idSector) {
     return(options)
 }
 
+getIndName <- function(key) {
+    conn <- myConnection()
+    indicator <- sqlQuery(
+        conn,
+        paste0("SELECT descriz FROM tabIndicatori WHERE nome ='",
+               key,
+               "'"),
+        stringsAsFactors = F)
+    odbcClose(conn)
+    
+    return(indicator)
+}
+
 
 makeInteractivePlot <- function(data, selected) {
     data <- select(data, GEO, obsValue, obsTime) %>% 
@@ -167,21 +180,35 @@ makeInteractivePlot <- function(data, selected) {
                data = data, 
                type = "line", 
                group = "GEO", 
-               radius = 0
-               p$chart(zoomType = "xy")
-               p$xAxis(categories = data$obsTime,
-                       title = "Anno", 
-                       rotation = -45)
-               p$yAxis(title = "Valore", 
-                       format = "{point.y:,.0f}")
-               
-               
-               selected <- pivotData(data)[selected, 1]
-               # Black Magic
-               p$params$series = lapply(seq_along(p$params$series), function(i) {
-                   x = p$params$series[[i]]
-                   x$visible = x$name %in% selected
-                   return(x)
-               })
-               return(p)
+               radius = 0)
+    p$chart(zoomType = "xy")
+    p$xAxis(categories = data$obsTime,
+            title = list(text = "Anno")
+    )
+    p$yAxis(title = list(text = "Valore", 
+                         format = "{point.y:,.0f}")
+    )
+    
+    
+    
+    selected <- pivotData(data)[selected, 1]
+    # Black Magic
+    p$params$series = lapply(seq_along(p$params$series), function(i) {
+        x = p$params$series[[i]]
+        x$visible = x$name %in% selected
+        return(x)
+    })
+    return(p)
 } 
+
+makeText <- function (data) {
+    dataTN <- data %>%
+        filter(GEO == 'ITH2') %>%
+        arrange(desc(obsTime)) %>%
+        summarize(primoA = first(), ultimoA = last())
+    cat(dataTN)
+    paste('Ultimo anno TN:', 
+          dataTN[1], 
+          '/n Primo anno TN :', 
+          dataTN[2])
+}
