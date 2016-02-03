@@ -141,15 +141,25 @@ getGEO <- function() {
     return(filters)
 }
 
-getIndicators <- function(idSector) {
+getIndicators <- function(idSector = NULL) {
     conn <- myConnection()
+    query <- 'SELECT * FROM tabIndicatori'
+    query <- ifelse(
+        is.null(idSector), 
+        query, 
+        paste0(query, ' WHERE idSettore =', idSector)
+    )
     indicators <- sqlQuery(
         conn, 
-        paste0("SELECT * FROM tabIndicatori WHERE idSettore=", 
-               idSector), 
+        query, 
         stringsAsFactors = F)
     odbcClose(conn)
     
+    return(indicators)
+}
+
+getIndicatorsList <- function(idSector = NULL){
+    indicators <- getIndicators(idSector)
     options <- list()
     for (i in 1:nrow(indicators)) {
         options[[as.character(indicators$descriz[i])]] <- indicators$nome[i]
@@ -201,14 +211,69 @@ makeInteractivePlot <- function(data, selected) {
     return(p)
 } 
 
-makeText <- function (data) {
+makeText <- function(data) {
     dataTN <- data %>%
         filter(GEO == 'ITH2') %>%
-        arrange(desc(obsTime)) %>%
-        summarize(primoA = first(), ultimoA = last())
-    cat(dataTN)
+        arrange(desc(obsTime))
+    uAnno <- slice(dataTN ,which.max(obsTime))
+    pAnno <- slice(dataTN, which.min(obsTime))
     paste('Ultimo anno TN:', 
-          dataTN[1], 
-          '/n Primo anno TN :', 
-          dataTN[2])
+          uAnno$obsValue, 
+          '<br> Primo anno TN :', 
+          pAnno$obsValue)
 }
+
+getWholeTNData <- function() {
+    indicators <- getIndicators()$nome
+    
+    df <- lapply(indicators, FUN = function(x) getTNData(x))
+    df <- Reduce(function(...) merge(..., by = 'obsTime', all = T), df)
+    colnames(df) <- c('obsTime', indicators)
+    return(df)
+}
+
+getTNData <- function(key) {
+    id <- getSQLId(key)
+    filter <- getFilters(id)
+    geoFilter <- 'ITH2'
+    
+    data <- getData(key, paste0(filter, '.', geoFilter, '.')) %>%
+        select(obsTime, obsValue)
+    return(data)
+}
+
+
+getWholeLastData <- function(updateProgress = NULL) {
+    
+    indicators <- getIndicators()$nome
+    ls <- lapply(indicators, FUN = function(x) getLastData(x, updateProgress))
+    
+    if (is.function(updateProgress)) updateProgress(detail = 'Merging..')
+    df <- Reduce(function(...) merge(..., by = 'GEO', all = T), ls)
+    colnames(df) <- c('GEO', indicators)
+    
+    if (is.function(updateProgress)) updateProgress(detail = 'Done')
+    
+    df <- data.frame(df,
+                     rank = mutate_each(df[-1], funs(min_rank)))
+
+    return(df)
+}
+
+getLastData <- function(key, updateProgress = NULL) {
+    id <- getSQLId(key)
+    filter <- getFilters(id)
+    geoFilter <- getGEOFilters()
+    
+    data <- getData(key, paste0(filter, '.', geoFilter, '.')) %>%
+        group_by(GEO) %>%
+        filter(obsTime == max(obsTime)) %>%
+        select(GEO, obsValue)
+    
+    if (is.function(updateProgress)) {
+        updateProgress(detail = key)
+    }
+    
+    return(data)
+}
+

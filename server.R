@@ -32,14 +32,20 @@ shinyServer(function(input, output, clientData, session) {
     sectors <- getSectors()
     geoFilter <- getGEOFilters()
     indicators <- reactive({ 
-        getIndicators(input$settore) 
+        getIndicatorsList(input$settore) 
     })
     
     
     output$NUTS <- renderDataTable(datatable(
         getGEO(),
         escape = FALSE,
-        rownames = FALSE
+        rownames = FALSE,
+        options = list(
+            columnDefs = list(
+                list(width = '30%',
+                     targets = c(0,1,2))
+            )
+        )
     )  %>%
         formatStyle(columns = 1:3, 
                     backgroundColor = '#222D32'
@@ -132,4 +138,36 @@ shinyServer(function(input, output, clientData, session) {
         data <- data()
         makeText(data)
     })
+    
+    
+    
+
+    
+    output$info1 <- renderInfoBox(
+        infoBox(
+            ({        
+                progress <- shiny::Progress$new()
+                progress$set(message = "Downloading data", value = 0)
+                # Close the progress when this reactive exits (even if there's an error)
+                on.exit(progress$close())
+                
+                updateProgress <- function(value = NULL, detail = NULL) {
+                    if (is.null(value)) {
+                        value <- progress$getValue()
+                        value <- value + (progress$getMax() - value) / 5
+                    }
+                    progress$set(detail = detail)
+                }
+                
+                data <- getWholeLastData(updateProgress)
+                sprintf('Valore Assoluto: %d', data[6,2])
+            }),
+            'Popolazione',
+            ({
+                data <- getWholeLastData()
+                sprintf('RANK: %d', data[6,10])
+            }),
+            fill = T
+        )
+    )
 })
