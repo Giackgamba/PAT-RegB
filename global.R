@@ -7,7 +7,11 @@ library(DT)
 library(rCharts)
 
 
-source("password.R")
+#source("password.R")    
+tabIndicators <- read.csv2('backupData/tabIndicatori.csv', stringsAsFactors = F)
+tabNUTS <- read.csv2('backupData/tabNUTS.csv', stringsAsFactors = F)
+tabConcepts <- read.csv2('backupData/tabConcepts.csv', stringsAsFactors = F)
+tabSettori <- read.csv2('backupData/tabSettori.csv', stringsAsFactors = F)
 
 ## Get the concepts (filters) relative to the key DataFlow from EUROSTAT
 downloadConcepts <- function(key) {
@@ -99,40 +103,24 @@ getConceptsForSQL <- function(key) {
 
 ## Retrive the id starting from the name
 getId <- function(key) {
-    conn <- myConnection()
-    id <- sqlQuery(
-        conn, 
-        paste0("SELECT idDataFlow FROM tabIndicatori WHERE nome = '", 
-               key, 
-               "'"), 
-        stringsAsFactors = F)
-    odbcClose(conn)
+    id <- as.integer(filter(tabIndicators, nome == key) %>% 
+                         select(idDataFlow))
     return(id)
 }
 
 ## Retrive the filter values
 getFilters <- function(id) {
-    conn <- myConnection()
-    concepts <- sqlQuery(
-        conn, 
-        paste0("SELECT value FROM tabConcepts WHERE idDataFlow = '", 
-               id,  
-               "'"), 
-        stringsAsFactors = F)
-    filter <- paste0(unlist(concepts), collapse = ".")
-    odbcClose(conn)
-    return(filter)
+    concepts <- filter(tabIndicators, idDataFlow == id) %>% 
+        select(concepts)
+    concepts <- as.character(concepts)
+    return(concepts)
 }
 
 ## Retive sector (fixed)
 
 getSectors <- function() {
-    conn <- myConnection()
-    sectors <- sqlQuery(
-        conn, 
-        "SELECT descriz, idSettore FROM tabSettori", 
-        stringsAsFactors = F)
-    odbcClose(conn)
+    
+    sectors <- tabSettori
     options <- list()
     for (i in 1:nrow(sectors)) {
         options[[as.character(sectors$descriz[i])]] <- sectors$idSettore[i]
@@ -142,19 +130,15 @@ getSectors <- function() {
 }
 
 getGEOFilters <- function() {
-    conn <- myConnection()
-    filters <- sqlQuery(conn, "SELECT id FROM tabNUTS", 
-                        stringsAsFactors = F) %>%
+    
+    filters <- select(tabNUTS, id) %>% 
         unlist() %>%
         paste0(collapse = "+")
-    odbcClose(conn)
     return(filters)
 }
 
 getGEO <- function() {
-    conn <- myConnection()
-    filters <- sqlQuery(conn, "SELECT id, descriz, stato FROM tabNUTS", 
-                        stringsAsFactors = F) %>%
+    filters <- tabNUTS %>%
         transmute(id, 
                   Regione = descriz, 
                   Stato = paste0('<img src="', 
@@ -162,23 +146,13 @@ getGEO <- function() {
                                  '.png" height="24" width = "24" alt = "', 
                                  stato, 
                                  '"></img>'))
-    odbcClose(conn)
     return(filters)
 }
 
 getIndicators <- function(idSector = NULL) {
-    conn <- myConnection()
-    query <- 'SELECT * FROM tabIndicatori'
-    query <- ifelse(
-        is.null(idSector), 
-        query, 
-        paste0(query, ' WHERE idSettore =', idSector)
-    )
-    indicators <- sqlQuery(
-        conn, 
-        query, 
-        stringsAsFactors = F)
-    odbcClose(conn)
+    indicators <- tabIndicators
+    if (!is.null(idSector))  
+        indicators <- filter(indicators, idSettore == idSector)
     
     return(indicators)
 }
@@ -193,14 +167,10 @@ getIndicatorsList <- function(idSector = NULL){
 }
 
 getIndName <- function(key) {
-    conn <- myConnection()
-    indicator <- sqlQuery(
-        conn,
-        paste0("SELECT descriz FROM tabIndicatori WHERE nome ='",
-               key,
-               "'"),
-        stringsAsFactors = F)
-    odbcClose(conn)
+    indicator <- tabIndicators %>%
+        filter(nome == key) %>%
+        select(descriz)
+    
     
     return(indicator)
 }
@@ -258,7 +228,7 @@ getWholeTNData <- function() {
 }
 
 getTNData <- function(key) {
-    id <- getSQLId(key)
+    id <- getId(key)
     filter <- getFilters(id)
     geoFilter <- 'ITH2'
     
@@ -268,7 +238,7 @@ getTNData <- function(key) {
 }
 
 
-getWholeLastData <- memoise(function(updateProgress = NULL) {
+getWholeLastData <- function(updateProgress = NULL) {
     
     indicators <- getIndicators()$nome
     ls <- lapply(indicators, FUN = function(x) getLastData(x, updateProgress))
@@ -281,12 +251,12 @@ getWholeLastData <- memoise(function(updateProgress = NULL) {
     
     df <- data.frame(df,
                      rank = mutate_each(df[-1], funs(min_rank)))
-
+    
     return(df)
-})
+}
 
 getLastData <- function(key, updateProgress = NULL) {
-    id <- getSQLId(key)
+    id <- getId(key)
     filter <- getFilters(id)
     geoFilter <- getGEOFilters()
     

@@ -9,7 +9,7 @@ library(shiny)
 library(shinydashboard)
 library(shinythemes)
 require(rCharts)
-source('functions.R')
+source('global.R')
 
 
 sectors <- getSectors()
@@ -81,7 +81,7 @@ shinyUI(
                                     width = 12,
                                     height = '50%',
                                     collapsible = F,
-                                    showOutput('plot', 'Highcharts')
+                                    showOutput('plot', 'highcharts')
                                 )
 #                                 valueBoxOutput('belowBox'),
 #                                 valueBoxOutput('infoBox'),
@@ -102,7 +102,13 @@ shinyUI(
                     'dashboard',
                     h1('DASHBOARD'),
                     fluidRow(
-                        infoBoxOutput('info1', width = 6)
+                        box(
+                            'DOVE ANDIAMO BENE:',
+                            background = 'green',
+                            solidHeader = T,
+                            renderText('textTitle')
+                            
+                            )
                     )
                 )
             )

@@ -10,7 +10,7 @@ library(rCharts)
 library(DT)
 library(knitr)
 library(dplyr)
-source('functions.R')
+source('global.R')
 
 options(
     DT.options = list(
@@ -139,35 +139,39 @@ shinyServer(function(input, output, clientData, session) {
         makeText(data)
     })
     
+    output$textBest <- renderText({
+        data <- getWholeLastData()
+        
+    })
     
     
 
     
-    output$info1 <- renderInfoBox(
-        infoBox(
-            ({        
-                progress <- shiny::Progress$new()
-                progress$set(message = "Downloading data", value = 0)
-                # Close the progress when this reactive exits (even if there's an error)
-                on.exit(progress$close())
-                
-                updateProgress <- function(value = NULL, detail = NULL) {
-                    if (is.null(value)) {
-                        value <- progress$getValue()
-                        value <- value + (progress$getMax() - value) / 5
-                    }
-                    progress$set(detail = detail)
-                }
-                
-                data <- getWholeLastData(updateProgress)
-                sprintf('Valore Assoluto: %d', data[6,2])
-            }),
-            'Popolazione',
-            ({
-                data <- getWholeLastData()
-                sprintf('RANK: %d', data[6,10])
-            }),
-            fill = T
-        )
-    )
+#     output$info1 <- renderInfoBox(
+#         infoBox(
+#             ({        
+#                 progress <- shiny::Progress$new()
+#                 progress$set(message = "Downloading data", value = 0)
+#                 # Close the progress when this reactive exits (even if there's an error)
+#                 on.exit(progress$close())
+#                 
+#                 updateProgress <- function(value = NULL, detail = NULL) {
+#                     if (is.null(value)) {
+#                         value <- progress$getValue()
+#                         value <- value + (progress$getMax() - value) / 5
+#                     }
+#                     progress$set(detail = detail)
+#                 }
+#                 
+#                 data <- getWholeLastData(updateProgress)
+#                 sprintf('Valore Assoluto: %d', data[6,2])
+#             }),
+#             'Popolazione',
+#             ({
+#                 data <- getWholeLastData()
+#                 sprintf('RANK: %d', data[6,10])
+#             }),
+#             fill = T
+#         )
+#     )
 })
