@@ -3,3 +3,4 @@
 .RData
 password.R
 packrat/lib*/
+rsconnect/

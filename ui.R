@@ -7,6 +7,7 @@
 
 library(shiny)
 library(shinydashboard)
+library(shinythemes)
 require(rCharts)
 source('functions.R')
 
@@ -57,6 +58,9 @@ shinyUI(
         ),
         
         dashboardBody(
+#             tags$head(
+#                 tags$link(rel = "stylesheet", type = "text/css", href = "agid.css")
+#             ),
             tabItems(
                 tabItem(
                     tabName = 'indicatori',
@@ -78,11 +82,11 @@ shinyUI(
                                     height = '50%',
                                     collapsible = F,
                                     showOutput('plot', 'Highcharts')
-                                ),
-                                valueBoxOutput('belowBox'),
-                                valueBoxOutput('infoBox'),
-                                valueBoxOutput('overBox'),
-                                collapsible = T
+                                )
+#                                 valueBoxOutput('belowBox'),
+#                                 valueBoxOutput('infoBox'),
+#                                 valueBoxOutput('overBox'),
+#                                 collapsible = T
                             ),
                             tabPanel('Testo',
                                      h1(

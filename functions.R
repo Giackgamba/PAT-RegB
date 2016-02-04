@@ -2,6 +2,7 @@ library(rsdmx)
 library(dplyr)
 library(tidyr)
 library(RODBC)
+library(memoise)
 library(DT)
 library(rCharts)
 
@@ -9,7 +10,7 @@ library(rCharts)
 source("password.R")
 
 ## Get the concepts (filters) relative to the key DataFlow from EUROSTAT
-getConcepts <- function(key) {
+downloadConcepts <- function(key) {
     BaseUrl <- "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/datastructure/ESTAT/DSD_"
     DSDUrl <- paste0(BaseUrl, key)
     DSD <- readSDMX(DSDUrl)
@@ -19,7 +20,7 @@ getConcepts <- function(key) {
 }
 
 ## Get the code list relative to the concept from EUROSTAT
-getCodeList <- function(key, concept) {
+downloadCodeList <- function(key, concept) {
     BaseUrl <- "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/datastructure/ESTAT/DSD_"
     DSDUrl <- paste0(BaseUrl, key)
     DSD <- readSDMX(DSDUrl)
@@ -29,7 +30,7 @@ getCodeList <- function(key, concept) {
 }
 
 ## Get the data, given the filter
-getData <- function(key, filter = NULL) {
+downloadData <- function(key, filter = NULL) {
     BaseUrl <- "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/data"
     if (is.null(filter)) {
         nFilter <- nrow(getConcepts(key)) - 4
@@ -40,6 +41,30 @@ getData <- function(key, filter = NULL) {
                      filter, 
                      sep = "/")
     data <- as.data.frame(readSDMX(dataUrl))
+    
+    write.csv2(data, paste0('backupData/', key, '.csv'), row.names = F)
+    return(data)
+}
+
+getDataOffline <- function(key) {
+    data <- read.csv2(paste0('backupData/', key, '.csv'), 
+                      stringsAsFactors = F,
+                      quote = '"')
+    # read.csv2 trasforma le colonne 'T' in booleane
+    # quindi li ritrasformiamo in character
+    # (non che quelle colonne siano utilizzate)
+    data[,sapply(data,class) == "logical"] <-
+        sapply(data[,sapply(data,class) == "logical"],
+               function(i) substr(as.character(i),1,1)
+        )
+    return(data)
+}
+
+getData <- function(key, filter = NULL) {
+    file <- paste0('backupData/', key, '.csv')
+    old <- difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
+    if (file.exists(file) & !old)  data <- getDataOffline(key)
+    else data <- downloadData(key, filter)
     return(data)
 }
 
@@ -73,7 +98,7 @@ getConceptsForSQL <- function(key) {
 }
 
 ## Retrive the id starting from the name
-getSQLId <- function(key) {
+getId <- function(key) {
     conn <- myConnection()
     id <- sqlQuery(
         conn, 
@@ -243,7 +268,7 @@ getTNData <- function(key) {
 }
 
 
-getWholeLastData <- function(updateProgress = NULL) {
+getWholeLastData <- memoise(function(updateProgress = NULL) {
     
     indicators <- getIndicators()$nome
     ls <- lapply(indicators, FUN = function(x) getLastData(x, updateProgress))
@@ -258,7 +283,7 @@ getWholeLastData <- function(updateProgress = NULL) {
                      rank = mutate_each(df[-1], funs(min_rank)))
 
     return(df)
-}
+})
 
 getLastData <- function(key, updateProgress = NULL) {
     id <- getSQLId(key)

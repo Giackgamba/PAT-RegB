@@ -60,7 +60,7 @@ shinyServer(function(input, output, clientData, session) {
     )
     
     id <- reactive({ 
-        getSQLId(input$ind) 
+        getId(input$ind) 
     })
     
     conceptFilter <- reactive({
