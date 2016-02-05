@@ -9,6 +9,7 @@ library(shiny)
 library(shinydashboard)
 library(shinythemes)
 require(rCharts)
+library(DT)
 source('global.R')
 
 

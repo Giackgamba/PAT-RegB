@@ -140,7 +140,7 @@ shinyServer(function(input, output, clientData, session) {
     })
     
     output$textBest <- renderText({
-        data <- getWholeLastData()
+        data <- getWholeData()
         
     })
     

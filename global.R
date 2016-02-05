@@ -1,13 +1,19 @@
+## library to read the sdmx's
 library(rsdmx)
+
+## libraries for data manipulation
 library(dplyr)
 library(tidyr)
+
+## library to read form DB
 library(RODBC)
-library(memoise)
+
+## libraries for interactive plot and table
 library(DT)
 library(rCharts)
 
 
-#source("password.R")    
+## Read system tables, always offline
 tabIndicators <- read.csv2('backupData/tabIndicatori.csv', stringsAsFactors = F)
 tabNUTS <- read.csv2('backupData/tabNUTS.csv', stringsAsFactors = F)
 tabConcepts <- read.csv2('backupData/tabConcepts.csv', stringsAsFactors = F)
@@ -33,7 +39,7 @@ downloadCodeList <- function(key, concept) {
     return(codelist)
 }
 
-## Get the data, given the filter
+## Download the data, given the filter
 downloadData <- function(key, filter = NULL) {
     BaseUrl <- "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/data"
     if (is.null(filter)) {
@@ -50,6 +56,7 @@ downloadData <- function(key, filter = NULL) {
     return(data)
 }
 
+## Read the indicator file
 getDataOffline <- function(key) {
     data <- read.csv2(paste0('backupData/', key, '.csv'), 
                       stringsAsFactors = F,
@@ -64,11 +71,13 @@ getDataOffline <- function(key) {
     return(data)
 }
 
+## Wrapper, read from offline or download if older than 10 days
 getData <- function(key, filter = NULL) {
     file <- paste0('backupData/', key, '.csv')
     old <- difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
     if (file.exists(file) & !old)  data <- getDataOffline(key)
     else data <- downloadData(key, filter)
+    data <- select(data, obsTime, GEO, obsValue)
     return(data)
 }
 
@@ -91,7 +100,6 @@ pivotData <- function(x) {
         return(res)
     } else cat("c'è stato qualche errore")
 }
-
 
 ## Helper to obtain the string to insert (manually) in the DB
 getConceptsForSQL <- function(key) {
@@ -117,7 +125,6 @@ getFilters <- function(id) {
 }
 
 ## Retive sector (fixed)
-
 getSectors <- function() {
     
     sectors <- tabSettori
@@ -129,6 +136,7 @@ getSectors <- function() {
     return(options)
 }
 
+## Read the NUTS list
 getGEOFilters <- function() {
     
     filters <- select(tabNUTS, id) %>% 
@@ -137,6 +145,7 @@ getGEOFilters <- function() {
     return(filters)
 }
 
+## Read the NUTS for the table in sidebar
 getGEO <- function() {
     filters <- tabNUTS %>%
         transmute(id, 
@@ -149,6 +158,7 @@ getGEO <- function() {
     return(filters)
 }
 
+## Get indicators
 getIndicators <- function(idSector = NULL) {
     indicators <- tabIndicators
     if (!is.null(idSector))  
@@ -157,6 +167,7 @@ getIndicators <- function(idSector = NULL) {
     return(indicators)
 }
 
+## List of indicators per sector to populate the dropdown
 getIndicatorsList <- function(idSector = NULL){
     indicators <- getIndicators(idSector)
     options <- list()
@@ -166,6 +177,7 @@ getIndicatorsList <- function(idSector = NULL){
     return(options)
 }
 
+## 
 getIndName <- function(key) {
     indicator <- tabIndicators %>%
         filter(nome == key) %>%
@@ -175,7 +187,7 @@ getIndName <- function(key) {
     return(indicator)
 }
 
-
+## Build the plot
 makeInteractivePlot <- function(data, selected) {
     data <- select(data, GEO, obsValue, obsTime) %>% 
         mutate(obsTime = as.numeric(obsTime))
@@ -218,57 +230,11 @@ makeText <- function(data) {
           pAnno$obsValue)
 }
 
-getWholeTNData <- function() {
+getWholeData <- function() {
     indicators <- getIndicators()$nome
     
-    df <- lapply(indicators, FUN = function(x) getTNData(x))
-    df <- Reduce(function(...) merge(..., by = 'obsTime', all = T), df)
-    colnames(df) <- c('obsTime', indicators)
+    df <- lapply(indicators, FUN = function(x) getData(x))
+    df <- Reduce(function(...) merge(..., by = c('obsTime', 'GEO'), all = T), df)
+    colnames(df) <- c('obsTime', 'GEO', indicators)
     return(df)
 }
-
-getTNData <- function(key) {
-    id <- getId(key)
-    filter <- getFilters(id)
-    geoFilter <- 'ITH2'
-    
-    data <- getData(key, paste0(filter, '.', geoFilter, '.')) %>%
-        select(obsTime, obsValue)
-    return(data)
-}
-
-
-getWholeLastData <- function(updateProgress = NULL) {
-    
-    indicators <- getIndicators()$nome
-    ls <- lapply(indicators, FUN = function(x) getLastData(x, updateProgress))
-    
-    if (is.function(updateProgress)) updateProgress(detail = 'Merging..')
-    df <- Reduce(function(...) merge(..., by = 'GEO', all = T), ls)
-    colnames(df) <- c('GEO', indicators)
-    
-    if (is.function(updateProgress)) updateProgress(detail = 'Done')
-    
-    df <- data.frame(df,
-                     rank = mutate_each(df[-1], funs(min_rank)))
-    
-    return(df)
-}
-
-getLastData <- function(key, updateProgress = NULL) {
-    id <- getId(key)
-    filter <- getFilters(id)
-    geoFilter <- getGEOFilters()
-    
-    data <- getData(key, paste0(filter, '.', geoFilter, '.')) %>%
-        group_by(GEO) %>%
-        filter(obsTime == max(obsTime)) %>%
-        select(GEO, obsValue)
-    
-    if (is.function(updateProgress)) {
-        updateProgress(detail = key)
-    }
-    
-    return(data)
-}
-
