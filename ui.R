@@ -15,6 +15,9 @@ source('global.R')
 
 sectors <- getSectors()
 
+
+
+
 shinyUI(
     dashboardPage(
         
@@ -59,9 +62,9 @@ shinyUI(
         ),
         
         dashboardBody(
-#             tags$head(
-#                 tags$link(rel = "stylesheet", type = "text/css", href = "agid.css")
-#             ),
+            #             tags$head(
+            #                 tags$link(rel = "stylesheet", type = "text/css", href = "agid.css")
+            #             ),
             tabItems(
                 tabItem(
                     tabName = 'indicatori',
@@ -84,10 +87,10 @@ shinyUI(
                                     collapsible = F,
                                     showOutput('plot', 'highcharts')
                                 )
-#                                 valueBoxOutput('belowBox'),
-#                                 valueBoxOutput('infoBox'),
-#                                 valueBoxOutput('overBox'),
-#                                 collapsible = T
+                                #                                 valueBoxOutput('belowBox'),
+                                #                                 valueBoxOutput('infoBox'),
+                                #                                 valueBoxOutput('overBox'),
+                                #                                 collapsible = T
                             ),
                             tabPanel('Testo',
                                      h1(
@@ -103,13 +106,27 @@ shinyUI(
                     'dashboard',
                     h1('DASHBOARD'),
                     fluidRow(
-                        box(
+                        box(width = 6,
                             'DOVE ANDIAMO BENE:',
                             background = 'green',
                             solidHeader = T,
-                            renderText('textTitle')
-                            
-                            )
+                            tableOutput('textBest')
+                        ),
+                        box(width = 6,
+                            'DOVE ANDIAMO MALE:',
+                            background = 'red',
+                            solidHeader = T,
+                            tableOutput('textWorst')
+                        )
+                    ),
+                    fluidRow(
+                        comparisonOutput('area', "Area"),
+                        comparisonOutput('popolazione', "Popolazione"),
+                        comparisonOutput('fertilita', "Fertilità"),
+                        comparisonOutput('mortinf', "Mortalità infantile"),
+                        comparisonOutput('nati', "Nascite"),
+                        comparisonOutput('morti', "Decessi"),
+                        comparisonOutput('spevita', "Speranza di vita a 65 anni")
                     )
                 )
             )

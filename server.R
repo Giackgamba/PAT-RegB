@@ -27,6 +27,13 @@ options(
     )
 )
 
+comparison <- function(input, output, session, ind) {
+    output$table <- renderTable({
+        getComparison(ind) %>%
+            select(Rank = rank, Geo = GEO, Valore = obsValue)
+    })
+}
+
 shinyServer(function(input, output, clientData, session) {
     
     sectors <- getSectors()
@@ -139,39 +146,28 @@ shinyServer(function(input, output, clientData, session) {
         makeText(data)
     })
     
-    output$textBest <- renderText({
-        data <- getWholeData()
-        
-    })
+    output$textBest <- renderTable({
+        res <- getBestTN() %>%
+            select(Indicatore = ind,
+                   Valore = obsValue,
+                   Rank = rank)
+    },
+    include.rownames = F)
     
+    output$textWorst <- renderTable({
+        res <- getWorstTN() %>%
+            select(Indicatore = ind,
+                   Valore = obsValue,
+                   Rank = rank)
+    },
+    include.rownames = F)  
     
-
+    output$area <- callModule(comparison, "area", "demo_r_d3area")
+    output$popolazione <- callModule(comparison, "popolazione", "demo_r_d2jan")
+    output$fertilita <- callModule(comparison, "fertilita", "demo_r_frate2")
+    output$mortinf <- callModule(comparison, "mortinf", "demo_r_minfind")
+    output$nati <- callModule(comparison, "nati", "demo_r_births")
+    output$morti <- callModule(comparison, "morti", "demo_r_magec")
+    output$spevita <- callModule(comparison, "spevita", "demo_r_mlifexp")
     
-#     output$info1 <- renderInfoBox(
-#         infoBox(
-#             ({        
-#                 progress <- shiny::Progress$new()
-#                 progress$set(message = "Downloading data", value = 0)
-#                 # Close the progress when this reactive exits (even if there's an error)
-#                 on.exit(progress$close())
-#                 
-#                 updateProgress <- function(value = NULL, detail = NULL) {
-#                     if (is.null(value)) {
-#                         value <- progress$getValue()
-#                         value <- value + (progress$getMax() - value) / 5
-#                     }
-#                     progress$set(detail = detail)
-#                 }
-#                 
-#                 data <- getWholeLastData(updateProgress)
-#                 sprintf('Valore Assoluto: %d', data[6,2])
-#             }),
-#             'Popolazione',
-#             ({
-#                 data <- getWholeLastData()
-#                 sprintf('RANK: %d', data[6,10])
-#             }),
-#             fill = T
-#         )
-#     )
 })
