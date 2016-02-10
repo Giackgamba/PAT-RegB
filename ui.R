@@ -79,7 +79,7 @@ shinyUI(
                                     collapsible = F,
                                     width = 12,
                                     #height = '100%',
-                                    dataTableOutput('table')
+                                    DT::dataTableOutput('table')
                                 )
                             ),
                             tabPanel(

@@ -14,16 +14,15 @@ source('global.R')
 
 options(
     DT.options = list(
-        server = TRUE,
-        searching = FALSE,
+        server = FALSE,
         pageLength = 12,
-        paging = FALSE,
         processing = TRUE,
-        escape = TRUE,
-        rownames = F,
+        escape = FALSE,
+        rownames = FALSE,
         language = list(
-            info = ''
-        )
+            info = ""
+        ),
+        dom = "t"
     )
 )
 
@@ -92,60 +91,60 @@ shinyServer(function(input, output, clientData, session) {
                 tab <- pivotData(data)
                 tab <- datatable(
                     tab,
-                    escape = FALSE,
-                    rownames = FALSE,
-                    selection = list(mode = 'multiple', 
+                    selection = list(mode = "multiple", 
                                      selected = c(5,6)
                     ),
+                    escape = FALSE,
                     options = list(
                         columnDefs = list(
                             list(orderable = FALSE, 
-                                 title = '',
-                                 targets = 10)
+                                 title = "",
+                                 targets = -1)
                         )
                     )
                 )
             })
+            )
         )
-    )
-    
-    observeEvent(
-        input$ind,
-        output$plot <- renderChart2(
-            ({
-                data <- data()
-                p <- makeInteractivePlot(data, input$table_rows_selected)
-                p$addParams(dom = 'plot')
-                
-                return(p)
-            })
+        
+        observeEvent(
+            input$ind,
+            output$plot <- renderChart2(
+                ({
+                    data <- data()
+                    p <- makeInteractivePlot(data, input$table_rows_selected)
+                    p$addParams(dom = 'plot')
+                    
+                    return(p)
+                })
+            )
         )
-    )
-    
-    output$textBest <- renderTable({
-        res <- getBestTN() %>%
-            select(Indicatore = ind,
-                   Valore = obsValue,
-                   Rank = rank) %>%
-            arrange(Rank)
-    },
-    include.rownames = F)
-    
-    output$textWorst <- renderTable({
-        res <- getWorstTN() %>%
-            select(Indicatore = ind,
-                   Valore = obsValue,
-                   Rank = rank) %>%
-            arrange(desc(Rank))
-    },
-    include.rownames = F)  
-    
-    output$area <- callModule(comparison, "area", "demo_r_d3area")
-    output$popolazione <- callModule(comparison, "popolazione", "demo_r_d2jan")
-    output$fertilita <- callModule(comparison, "fertilita", "demo_r_frate2")
-    output$mortinf <- callModule(comparison, "mortinf", "demo_r_minfind")
-    output$nati <- callModule(comparison, "nati", "demo_r_births")
-    output$morti <- callModule(comparison, "morti", "demo_r_magec")
-    output$spevita <- callModule(comparison, "spevita", "demo_r_mlifexp")
-    
+        
+        output$textBest <- renderTable({
+            res <- getBestTN() %>%
+                select(Indicatore = ind,
+                       Valore = obsValue,
+                       Rank = rank) %>%
+                arrange(Rank)
+        },
+        include.rownames = F)
+        
+        output$textWorst <- renderTable({
+            res <- getWorstTN() %>%
+                select(Indicatore = ind,
+                       Valore = obsValue,
+                       Rank = rank) %>%
+                arrange(desc(Rank))
+        },
+        include.rownames = F)  
+        
+        output$area <- callModule(comparison, "area", "demo_r_d3area")
+        output$popolazione <- callModule(comparison, "popolazione", "demo_r_d2jan")
+        output$fertilita <- callModule(comparison, "fertilita", "demo_r_frate2")
+        output$mortinf <- callModule(comparison, "mortinf", "demo_r_minfind")
+        output$nati <- callModule(comparison, "nati", "demo_r_births")
+        output$morti <- callModule(comparison, "morti", "demo_r_magec")
+        output$spevita <- callModule(comparison, "spevita", "demo_r_mlifexp")
+        
 })
+    

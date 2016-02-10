@@ -1,5 +1,7 @@
+@import url(https://fonts.googleapis.com/css?family=Titillium+Web:400,300,400italic,700);
+
 .skin-blue .main-header .logo {
-  font-family: "Titillium";
+  font-family: "Titillium Web", sans-serif;
   font-weight: bold;
   font-size: 24px;
   background-color: #670724;
@@ -10,7 +12,7 @@
 }
 
 .skin-blue .main-header .navbar {
-  font-family: "Titillium";
+  font-family: "Titillium Web", sans-serif;
   background-color: #8B1F3F;
 }
 
@@ -19,21 +21,21 @@
 }
 
 body {
-    font-family: "Titillium";
+    font-family: "Titillium Web", sans-serif;
 }
 
 h1 {
-    font-family: "Titillium";
+    font-family: "Titillium Web", sans-serif;
 }
 
 .box-header {
     background-color: #8B1F3F;
     color: #fff;
-    font-family: "Titillium";
+    font-family: "Titillium Web", sans-serif;
 }
 
 .box-title {
-    font-family: "Titillium";
+    font-family: "Titillium Web", sans-serif;
 }
 
 .btn-box-tool {
