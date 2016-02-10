@@ -7,7 +7,6 @@
 
 library(shiny)
 library(shinydashboard)
-library(shinythemes)
 require(rCharts)
 library(DT)
 source('global.R')
@@ -62,9 +61,11 @@ shinyUI(
         ),
         
         dashboardBody(
-            #             tags$head(
-            #                 tags$link(rel = "stylesheet", type = "text/css", href = "agid.css")
-            #             ),
+            tags$head(
+                tags$link(rel = "stylesheet", 
+                          type = "text/css", 
+                          href = "custom.css")
+            ),
             tabItems(
                 tabItem(
                     tabName = 'indicatori',
@@ -73,30 +74,22 @@ shinyUI(
                             width = 12,
                             height = 1250,
                             tabPanel(
-                                'Overview',
+                                'Tabella',
                                 box(title = 'Serie Storica',
-                                    color = 'green',
                                     collapsible = F,
                                     width = 12,
                                     #height = '100%',
                                     dataTableOutput('table')
-                                ),
-                                box(title = 'Grafico',
-                                    width = 12,
-                                    height = '50%',
-                                    collapsible = F,
-                                    showOutput('plot', 'highcharts')
                                 )
-                                #                                 valueBoxOutput('belowBox'),
-                                #                                 valueBoxOutput('infoBox'),
-                                #                                 valueBoxOutput('overBox'),
-                                #                                 collapsible = T
                             ),
-                            tabPanel('Testo',
-                                     h1(
-                                         textOutput('textTitle')
-                                     ),
-                                     textOutput('textTrento')
+                            tabPanel(
+                                'Grafico',
+                                     box(title = 'Grafico',
+                                         width = 12,
+                                         height = '50%',
+                                         collapsible = F,
+                                         showOutput('plot', 'highcharts')
+                                     )
                             )
                         )
                     )
@@ -104,23 +97,23 @@ shinyUI(
                 
                 tabItem(
                     'dashboard',
-                    h1('DASHBOARD'),
+                    h1('Dashboard'),
                     fluidRow(
-                        box(width = 6,
-                            'DOVE ANDIAMO BENE:',
-                            background = 'green',
+                        box(id = 'good',
+                            width = 6,
+                            title = 'Dove andiamo bene:',
                             solidHeader = T,
                             tableOutput('textBest')
                         ),
-                        box(width = 6,
-                            'DOVE ANDIAMO MALE:',
-                            background = 'red',
+                        box(id = 'bad',
+                            width = 6,
+                            title = 'Dove andiamo male:',
                             solidHeader = T,
                             tableOutput('textWorst')
                         )
                     ),
                     fluidRow(
-                        comparisonOutput('area', "Area"),
+                        comparisonOutput(id = 'area', "Area"),
                         comparisonOutput('popolazione', "Popolazione"),
                         comparisonOutput('fertilita', "Fertilità"),
                         comparisonOutput('mortinf', "Mortalità infantile"),
@@ -133,4 +126,3 @@ shinyUI(
         )
     )
 )
-

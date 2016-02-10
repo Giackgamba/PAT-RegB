@@ -1,0 +1,55 @@
+.skin-blue .main-header .logo {
+  font-family: "Titillium";
+  font-weight: bold;
+  font-size: 24px;
+  background-color: #670724;
+}
+
+.skin-blue .main-header .logo:hover {
+    background-color: #670724;
+}
+
+.skin-blue .main-header .navbar {
+  font-family: "Titillium";
+  background-color: #8B1F3F;
+}
+
+.skin-blue .main-header .navbar .sidebar-toggle:hover {
+    background-color: #670724;
+}
+
+body {
+    font-family: "Titillium";
+}
+
+h1 {
+    font-family: "Titillium";
+}
+
+.box-header {
+    background-color: #8B1F3F;
+    color: #fff;
+    font-family: "Titillium";
+}
+
+.box-title {
+    font-family: "Titillium";
+}
+
+.btn-box-tool {
+    color: #fff;
+}
+
+.skin-blue .sidebar-menu>li.active>a, .skin-blue .sidebar-menu>li:hover>a {
+    border-left-color: #8B1F3F;
+}
+
+.selectize-input.focus {
+    border-color: #8B1F3F;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 
+    0 0 8px rgba(139, 31, 64, 0.6);
+}
+
+.nav-tabs-custom>.nav-tabs>li.active {
+    border-top-color: #8B1F3F;
+}

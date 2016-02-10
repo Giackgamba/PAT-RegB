@@ -43,20 +43,22 @@ shinyServer(function(input, output, clientData, session) {
     })
     
     
-    output$NUTS <- renderDataTable(datatable(
-        getGEO(),
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-            columnDefs = list(
-                list(width = '30%',
-                     targets = c(0,1,2))
+    output$NUTS <- renderDataTable(
+        datatable(
+            getGEO(),
+            escape = FALSE,
+            rownames = FALSE,
+            options = list(
+                columnDefs = list(
+                    list(width = '30%',
+                         targets = c(0,1,2))
+                )
             )
-        )
-    )  %>%
-        formatStyle(columns = 1:3, 
-                    backgroundColor = '#222D32'
-        )
+        )  %>%
+            formatStyle(
+                columns = 1:3, 
+                backgroundColor = '#222D32'
+            )
     )
     
     observeEvent(
@@ -88,19 +90,20 @@ shinyServer(function(input, output, clientData, session) {
             ({
                 data <- data()
                 tab <- pivotData(data)
-                tab <- datatable(tab,
-                                 escape = FALSE,
-                                 rownames = FALSE,
-                                 selection = list(mode = 'multiple', 
-                                                  selected = c(5,6)
-                                 ),
-                                 options = list(
-                                     columnDefs = list(
-                                         list(orderable = FALSE, 
-                                              title = '',
-                                              targets = 11)
-                                     )
-                                 )
+                tab <- datatable(
+                    tab,
+                    escape = FALSE,
+                    rownames = FALSE,
+                    selection = list(mode = 'multiple', 
+                                     selected = c(5,6)
+                    ),
+                    options = list(
+                        columnDefs = list(
+                            list(orderable = FALSE, 
+                                 title = '',
+                                 targets = 10)
+                        )
+                    )
                 )
             })
         )
@@ -119,38 +122,12 @@ shinyServer(function(input, output, clientData, session) {
         )
     )
     
-    output$belowBox <- renderValueBox({
-        valueBox(4, ' Regioni sotto PAT', 
-                 color = 'green', 
-                 icon = icon('thumbs-down'))
-    })
-    
-    output$overBox <- renderValueBox({
-        valueBox(7, ' Regioni sopra PAT', 
-                 color = 'red', 
-                 icon = icon('thumbs-up'))
-    })
-    
-    output$infoBox <- renderValueBox({
-        valueBox(7, ' Valore della PAT', 
-                 color = 'yellow', 
-                 icon = icon('newspaper-o'))
-    })
-    
-    output$textTitle <- renderText({
-        as.character(getIndName(input$ind))
-    })
-    
-    output$textTrento <- renderText({
-        data <- data()
-        makeText(data)
-    })
-    
     output$textBest <- renderTable({
         res <- getBestTN() %>%
             select(Indicatore = ind,
                    Valore = obsValue,
-                   Rank = rank)
+                   Rank = rank) %>%
+            arrange(Rank)
     },
     include.rownames = F)
     
@@ -158,7 +135,8 @@ shinyServer(function(input, output, clientData, session) {
         res <- getWorstTN() %>%
             select(Indicatore = ind,
                    Valore = obsValue,
-                   Rank = rank)
+                   Rank = rank) %>%
+            arrange(desc(Rank))
     },
     include.rownames = F)  
     

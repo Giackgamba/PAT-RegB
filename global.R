@@ -96,10 +96,10 @@ pivotData <- function(x) {
         res <- x %>%
             select(GEO, obsTime, obsValue) %>%
             spread(obsTime, obsValue) %>%
-            .[, c(1, (ncol(.) - 9):ncol(.))] %>%
+            .[, c(1, (ncol(.) - 8):ncol(.))] %>%
             mutate(
                 img = ifelse(
-                    .[, 11] > .[, 10],
+                    .[, 10] > .[, 9],
                     "<img src=\"uparrow137.svg\" height=\"16\" width = \"16\"></img>",
                     "<img src=\"downarrow103.svg\" height=\"16\" width = \"16\"></img>"
                 )
@@ -201,12 +201,21 @@ getIndName <- function(key) {
 makeInteractivePlot <- function(data, selected) {
     data <- select(data, GEO, obsValue, obsTime) %>%
         mutate(obsTime = as.numeric(obsTime))
+    
+    colors <- colorRampPalette(
+        c(rgb(0.596,0.2,0.318),
+          rgb(0.667,0.349,0.224),
+          rgb(0.153,0.459,0.325),
+          rgb(0.376,0.592,0.196)
+        )
+    )(12)
     p <- hPlot(
         y = "obsValue",
         x = "obsTime",
         data = data,
         type = "line",
         group = "GEO",
+        color = "red",
         radius = 0
     )
     p$chart(zoomType = "xy")
@@ -214,6 +223,7 @@ makeInteractivePlot <- function(data, selected) {
             title = list(text = "Anno"))
     p$yAxis(title = list(text = "Valore",
                          format = "{point.y:,.0f}"))
+    p$colors(colors)
     selected <- pivotData(data)[selected, 1]
     # Black Magic
     p$params$series = lapply(seq_along(p$params$series), function(i) {
@@ -224,17 +234,6 @@ makeInteractivePlot <- function(data, selected) {
     return(p)
 }
 
-makeText <- function(data) {
-    dataTN <- data %>%
-        filter(GEO == "ITH2") %>%
-        arrange(desc(obsTime))
-    uAnno <- slice(dataTN ,which.max(obsTime))
-    pAnno <- slice(dataTN, which.min(obsTime))
-    paste("Ultimo anno TN:",
-          uAnno$obsValue,
-          "<br> Primo anno TN :",
-          pAnno$obsValue)
-}
 
 getWholeData <- function() {
     indicators <- getIndicators()$nome
@@ -258,14 +257,16 @@ getRank <- function(x) {
 }
 
 getBestTN <- function() {
-    indicators <- getIndicators()$nome
+    indicators <- getIndicators()
     
     df <- do.call(rbind, 
-                  lapply(
-                      indicators, FUN = function(x){
-                          d <- getRank(x) %>%
-                              mutate(ind = x) %>%
-                              filter(GEO == 'ITH2' & rank<=6)
+                  apply(
+                      indicators, 
+                      MARGIN = 1,
+                      FUN = function(x){
+                          d <- getRank(x['nome']) %>%
+                              mutate(ind = x['descriz']) %>%
+                              filter(GEO == 'ITH2' & rank<=6) 
                       }
                   )
     )
@@ -273,13 +274,15 @@ getBestTN <- function() {
 }
 
 getWorstTN <- function() {
-    indicators <- getIndicators()$nome
+    indicators <- getIndicators()
     
     df <- do.call(rbind, 
-                  lapply(
-                      indicators, FUN = function(x){
-                          d <- getRank(x) %>%
-                              mutate(ind = x) %>%
+                  apply(
+                      indicators, 
+                      MARGIN = 1,
+                      FUN = function(x){
+                          d <- getRank(x['nome']) %>%
+                              mutate(ind = x['descriz']) %>%
                               filter(GEO == 'ITH2' & rank>=7)
                       }
                   )
@@ -302,12 +305,13 @@ comparisonOutput <- function(id, label) {
     ns <- NS(id)
     
     tagList(
-        box(title = label,
+        box(id = label,
+            title = label,
             width = 4,
             collapsible = T,
             collapsed = F,
             solidHeader = T,
-            background="yellow",
+
             tableOutput(ns("table"))
         )
     )
