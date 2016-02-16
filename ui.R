@@ -11,11 +11,7 @@ require(rCharts)
 library(DT)
 source('global.R')
 
-
 sectors <- getSectors()
-
-
-
 
 shinyUI(
     dashboardPage(
@@ -24,8 +20,6 @@ shinyUI(
         dashboardHeader(title = "Benchmarking regionale",
                         titleWidth = 380
         ),
-        
-        
         
         # Sidebar with a select input for indicator
         dashboardSidebar(
@@ -112,15 +106,16 @@ shinyUI(
                             tableOutput('textWorst')
                         )
                     ),
-                    fluidRow(
-                        comparisonOutput(id = 'area', "Area"),
-                        comparisonOutput('popolazione', "Popolazione"),
-                        comparisonOutput('fertilita', "Fertilità"),
-                        comparisonOutput('mortinf', "Mortalità infantile"),
-                        comparisonOutput('nati', "Nascite"),
-                        comparisonOutput('morti', "Decessi"),
-                        comparisonOutput('spevita', "Speranza di vita a 65 anni")
-                    )
+                    # fluidRow(uiOutput("boxes")),
+                     fluidRow(
+                        comparisonOutput(4),
+                        comparisonOutput(10),
+                         comparisonOutput(5),
+                        # comparisonOutput(10),
+                        # comparisonOutput(11),
+                        # comparisonOutput(12),
+                        comparisonOutput(18)
+                     )
                 )
             )
         )

@@ -27,6 +27,9 @@ body {
 h1 {
     font-family: "Titillium Web", sans-serif;
 }
+.box {
+    border-top-color: #670724;
+}
 
 .box-header {
     background-color: #8B1F3F;

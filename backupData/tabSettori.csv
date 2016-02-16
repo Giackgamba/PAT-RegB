@@ -1,7 +1,9 @@
-"descriz";"idSettore"
-"Lavoro";1
-"Istruzione";2
-"Turismo";3
-"R & S";4
-"ICT";5
-"Ambiente";6
+"idSettore";"descriz"
+1;"Demografia"
+2;"Salute"
+3;"Istruzione"
+4;"Economia"
+5;"Mercato del lavoro"
+6;"Turismo"
+7;"Innovazione"
+8;"Ambiente"

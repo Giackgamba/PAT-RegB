@@ -22,10 +22,20 @@ tabConcepts <-
 tabSettori <-
     read.csv2("backupData/tabSettori.csv", stringsAsFactors = F)
 
+## Get the ind key, from ind id
+getKey <- function(id) {
+    key <- filter(tabIndicators, idDataFlow == id) %>%
+        select(nome) %>%
+        as.character()
+    return(key)
+}
+
+
 ## Get the concepts (filters) relative to the key DataFlow from EUROSTAT
-downloadConcepts <- function(key) {
+downloadConcepts <- function(id) {
     BaseUrl <-
         "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/datastructure/ESTAT/DSD_"
+    key <- getKey(id)
     DSDUrl <- paste0(BaseUrl, key)
     DSD <- readSDMX(DSDUrl)
     concepts <- as.data.frame(DSD@concepts,
@@ -34,9 +44,10 @@ downloadConcepts <- function(key) {
 }
 
 ## Get the code list relative to the concept from EUROSTAT
-downloadCodeList <- function(key, concept) {
+downloadCodeList <- function(id, concept) {
     BaseUrl <-
         "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/datastructure/ESTAT/DSD_"
+    key <- getKey(id)
     DSDUrl <- paste0(BaseUrl, key)
     DSD <- readSDMX(DSDUrl)
     codelist <- as.data.frame(DSD@codelists,
@@ -45,25 +56,24 @@ downloadCodeList <- function(key, concept) {
 }
 
 ## Download the data, given the filter
-downloadData <- function(key, filter = NULL) {
+downloadData <- function(id) {
     BaseUrl <- "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/data"
-    if (is.null(filter)) {
-        nFilter <- nrow(downloadConcepts(key)) - 4
-        filter <- paste(rep(".", nFilter - 1), collapse = "")
-    }
+    key <- getKey(id)
+    filter <- paste0(getFilters(id), ".", getGEOFilters(), ".")
     dataUrl <- paste(BaseUrl,
                      key,
                      filter,
                      sep = "/")
     data <- as.data.frame(readSDMX(dataUrl))
-    write.csv2(data, paste0("backupData/", key, ".csv"), row.names = F)
+    write.csv2(data, paste0("backupData/", key, "-", id, ".csv"), row.names = F)
     return(data)
 }
 
 ## Read the indicator file
-getDataOffline <- function(key) {
+getDataOffline <- function(id) {
+    key <- getKey(id)
     data <- read.csv2(
-        paste0("backupData/", key, ".csv"),
+        paste0("backupData/", key, "-", id, ".csv"),
         stringsAsFactors = F,
         quote = "\""
     )
@@ -74,19 +84,27 @@ getDataOffline <- function(key) {
         sapply(data[,sapply(data,class) == "logical"],
                function(i)
                    substr(as.character(i),1,1))
+    
     return(data)
 }
 
 ## Wrapper, read from offline or download if older than 10 days
-getData <- function(key, filter = NULL) {
-    file <- paste0("backupData/", key, ".csv")
-    old <-
-        difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
-    if (file.exists(file) & !old)
-        data <- getDataOffline(key)
+getData <- function(id) {
+    key <- getKey(id)
+    file <- paste0("backupData/", key, "-", id, ".csv")
+    if (file.exists(file)) {
+        old <-
+            difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
+        if (!old)
+            data <- getDataOffline(id)
+    }
     else
-        data <- downloadData(key, filter)
-    data <- select(data, obsTime, GEO, obsValue)
+        data <- downloadData(id)
+    data <- data %>% 
+        select(obsTime, GEO, obsValue) %>%
+        group_by(obsTime, GEO) %>%
+        summarise(obsValue = sum(obsValue)) %>%
+        ungroup()
     return(data)
 }
 
@@ -96,10 +114,10 @@ pivotData <- function(x) {
         res <- x %>%
             select(GEO, obsTime, obsValue) %>%
             spread(obsTime, obsValue) %>%
-            .[, c(1, (ncol(.) - 8):ncol(.))] %>%
+            .[, c(1, (ncol(.) - ifelse(ncol(.)>8, 8, ncol(.)-2)):ncol(.))] %>%
             mutate(
                 img = ifelse(
-                    .[, 10] > .[, 9],
+                    .[, ncol(.)] > .[, ncol(.)-1],
                     "<img src=\"uparrow137.svg\" height=\"16\" width = \"16\"></img>",
                     "<img src=\"downarrow103.svg\" height=\"16\" width = \"16\"></img>"
                 )
@@ -113,7 +131,7 @@ pivotData <- function(x) {
 
 ## Helper to obtain the string to insert (manually) in the DB
 getConceptsForSQL <- function(key) {
-    lev <- levels(getConcepts(key)$id)
+    lev <- levels(downloadConcepts(key)$id)
     a <- head(lev,-6) %>%
         paste(collapse = ".")
     return(a)
@@ -128,9 +146,10 @@ getId <- function(key) {
 
 ## Retrive the filter values
 getFilters <- function(id) {
-    concepts <- filter(tabIndicators, idDataFlow == id) %>%
-        select(concepts)
-    concepts <- as.character(concepts)
+    concepts <- filter(tabConcepts, idDataFlow == id) %>%
+        select(value) %>%
+        unlist() %>%
+        paste0(collapse = ".")
     return(concepts)
 }
 
@@ -184,7 +203,7 @@ getIndicatorsList <- function(idSector = NULL) {
     indicators <- getIndicators(idSector)
     options <- list()
     for (i in 1:nrow(indicators)) {
-        options[[as.character(indicators$descriz[i])]] <- indicators$nome[i]
+        options[[as.character(indicators$descriz[i])]] <- indicators$idDataFlow[i]
     }
     return(options)
 }
@@ -224,6 +243,7 @@ makeInteractivePlot <- function(data, selected) {
     p$yAxis(title = list(text = "Valore",
                          format = "{point.y:,.0f}"))
     p$colors(colors)
+    cat(selected)
     selected <- pivotData(data)[selected, 1]
     # Black Magic
     p$params$series = lapply(seq_along(p$params$series), function(i) {
@@ -236,13 +256,13 @@ makeInteractivePlot <- function(data, selected) {
 
 
 getWholeData <- function() {
-    indicators <- getIndicators()$nome
+    indicators <- getIndicators()
     
-    df <- lapply(
-        indicators, FUN = function(x)
+    df <- sapply(
+        indicators$idDataFlow, FUN = function(x)
             x =  getData(x)
     )
-    names(df) <- indicators
+    names(df) <- indicators$nome
     df <-
         Reduce(function(...)
             merge(..., by = c("obsTime", "GEO"), all = T), df)
@@ -250,10 +270,21 @@ getWholeData <- function() {
     return(df)
 }
 
-getRank <- function(x) {
-    df <- getData(x) %>%
+getRank <- function(id) {
+    direction <- filter(tabIndicators, idDataFlow == id) %>%
+        select(direction) %>%
+        as.character(.)
+    
+    df <- getData(id) %>%
         filter(obsTime == max(obsTime)) %>%
-        mutate(rank = as.integer(rank(desc(obsValue))))
+        mutate(dir = direction) %>%
+        mutate(rank = as.integer(
+            ifelse(dir == "-", 
+                   rank(obsValue), 
+                   rank(desc(obsValue))
+            ) 
+        )
+        )
 }
 
 getBestTN <- function() {
@@ -264,7 +295,7 @@ getBestTN <- function() {
                       indicators, 
                       MARGIN = 1,
                       FUN = function(x){
-                          d <- getRank(x['nome']) %>%
+                          d <- getRank(as.integer(x['idDataFlow'])) %>%
                               mutate(ind = x['descriz']) %>%
                               filter(GEO == 'ITH2' & rank<=6) 
                       }
@@ -281,7 +312,7 @@ getWorstTN <- function() {
                       indicators, 
                       MARGIN = 1,
                       FUN = function(x){
-                          d <- getRank(x['nome']) %>%
+                          d <- getRank(as.integer(x['idDataFlow'])) %>%
                               mutate(ind = x['descriz']) %>%
                               filter(GEO == 'ITH2' & rank>=7)
                       }
@@ -290,10 +321,9 @@ getWorstTN <- function() {
     df
 }
 
-getComparison <- function(ind) {
-    
-    df <-  getRank(ind) %>%
-        mutate(ind = ind) %>%
+getComparison <- function(id) {
+    df <-  getRank(id) %>%
+        mutate(ind = id) %>%
         filter(GEO == 'ITH2' | rank %in% c(1,2,11,12)) %>%
         arrange(rank)
     df
@@ -301,26 +331,31 @@ getComparison <- function(ind) {
 
 ## Start Comparison Module
 ## Comparison UI
-comparisonOutput <- function(id, label) {
+comparisonOutput <- function(id) {
     ns <- NS(id)
+
+    nome <- tabIndicators %>% 
+        filter(idDataFlow == id) %>%
+        select(descriz) %>%
+        as.character(.)
     
     tagList(
-        box(id = label,
-            title = label,
+        box(id = id,
+            title = nome,
             width = 4,
             collapsible = T,
             collapsed = F,
             solidHeader = T,
-
+            
             tableOutput(ns("table"))
         )
     )
 }
 
 ## Comparison Server
-comparison <- function(input, output, session, ind) {
+comparison <- function(input, output, session, id) {
     output$table <- renderTable({
-        getComparison(ind) %>%
+        getComparison(id) %>%
             select(Rank = rank, Geo = GEO, Valore = obsValue)
     },
     include.rownames = F)

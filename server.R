@@ -26,13 +26,6 @@ options(
     )
 )
 
-comparison <- function(input, output, session, ind) {
-    output$table <- renderTable({
-        getComparison(ind) %>%
-            select(Rank = rank, Geo = GEO, Valore = obsValue)
-    })
-}
-
 shinyServer(function(input, output, clientData, session) {
     
     sectors <- getSectors()
@@ -72,16 +65,20 @@ shinyServer(function(input, output, clientData, session) {
     })
     
     conceptFilter <- reactive({
-        getFilters(id()) 
+        input$ind
+        getFilters(input$ind) 
     })
     
     filter <- reactive({ 
+        input$ind
         paste0(conceptFilter(), '.', geoFilter, '.') 
     })
     
-    data <- reactive({ 
-        getData(input$ind, filter()) 
+    data <- reactive({
+        input$ind
+        getData(input$ind)
     })
+
     
     observeEvent(
         input$ind,
@@ -138,13 +135,21 @@ shinyServer(function(input, output, clientData, session) {
         },
         include.rownames = F)  
         
-        output$area <- callModule(comparison, "area", "demo_r_d3area")
-        output$popolazione <- callModule(comparison, "popolazione", "demo_r_d2jan")
-        output$fertilita <- callModule(comparison, "fertilita", "demo_r_frate2")
-        output$mortinf <- callModule(comparison, "mortinf", "demo_r_minfind")
-        output$nati <- callModule(comparison, "nati", "demo_r_births")
-        output$morti <- callModule(comparison, "morti", "demo_r_magec")
-        output$spevita <- callModule(comparison, "spevita", "demo_r_mlifexp")
+        
+        # output$boxes <- renderUI(
+        #     lapply(1:nrow(tabIndicators), function(i) {
+        #         callModule(comparison, paste0('comp',i), tabIndicators$nome[i])
+        #     })
+        # )
+        
+
+         output$area <- callModule(comparison, 4, 4)
+         output$popolazione <- callModule(comparison, 10, 10)
+         output$fertilita <- callModule(comparison, 5, 5)
+        # output$mortinf <- callModule(comparison, 10)
+        # output$nati <- callModule(comparison, 11)
+        # output$morti <- callModule(comparison, 12)
+        # output$spevita <- callModule(comparison, 18)
         
 })
     
