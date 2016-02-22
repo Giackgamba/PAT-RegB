@@ -62,26 +62,25 @@ shinyUI(
                 tabItem(
                     tabName = 'indicatori',
                     h1(textOutput('title')),
-                    fluidRow(
-                        tabBox(
-                            width = 12,
-                            tabPanel(
-                                'Tabella',
-                                box(title = 'Serie Storica',
-                                    collapsible = F,
-                                    width = 12,
-                                    #height = '100%',
-                                    DT::dataTableOutput('table')
-                                )
-                            ),
-                            tabPanel(
-                                'Grafico',
-                                     box(title = 'Grafico',
-                                         width = 12,
-                                         height = '50%',
-                                         collapsible = F,
-                                         showOutput('plot', 'highcharts')
-                                     )
+                    tabBox(
+                        width = 12,
+                        height = 650,
+                        tabPanel(
+                            'Tabella',
+                            box(title = 'Serie Storica',
+                                collapsible = F,
+                                width = 12,
+                                #height = '100%',
+                                DT::dataTableOutput('table')
+                            )
+                        ),
+                        tabPanel(
+                            'Grafico',
+                            box(title = 'Grafico',
+                                width = 12,
+                                height = '50%',
+                                collapsible = F,
+                                showOutput('plot', 'highcharts')
                             )
                         )
                     )
@@ -103,32 +102,46 @@ shinyUI(
                             tableOutput('textWorst')
                         )
                     ),                
-                   
-                     # fluidRow(htmlOutput("boxes")),
-                     fluidRow(
-                         box(id = 'demo',
-                             width = 12,
-                             title = 'Demografia',
-                             collapsible = T,
-                             collapsed = T,
-                             comparisonOutput('fert', 4),
-                             comparisonOutput('mortinf', 5),
-                             comparisonOutput('asp', 8),
-                             comparisonOutput('incr', 22)
-                             ),
-                         box(id = 'salu',
-                             width = 12,
-                             title = 'Salute',
-                             collapsible = T),
-                         box(id = 'ist',
-                             width = 12,
-                             title = 'Istruzione',
-                             collapsible = T),
-                         box(id = 'eco',
-                             width = 12,
-                             title = 'Economia',
-                             collapsible = T)
-                      )
+                    
+                    # fluidRow(htmlOutput("boxes")),
+                    fluidRow(
+                        box(id = 'demo',
+                            width = 12,
+                            title = 'Demografia',
+                            collapsible = T,
+                            collapsed = T,
+                            comparisonOutput('fert', 4),
+                            comparisonOutput('mortinf', 5),
+                            comparisonOutput('asp', 8),
+                            comparisonOutput('incr', 22)
+                        ),
+                        box(id = 'salu',
+                            width = 12,
+                            title = 'Salute',
+                            collapsible = T,
+                            collapsed = T,
+                            comparisonOutput('tum', 10),
+                            comparisonOutput('inc', 11),
+                            comparisonOutput('cardio', 12)
+                        ),
+                        box(id = 'ist',
+                            width = 12,
+                            title = 'Istruzione',
+                            collapsible = T,
+                            collapsed = T,
+                            comparisonOutput('abb', 13),
+                            comparisonOutput('terz', 16)
+                        ),
+                        box(id = 'eco',
+                            width = 12,
+                            title = 'Economia',
+                            collapsible = T,
+                            collapsed = T,
+                            comparisonOutput('unloc', 17),
+                            comparisonOutput('redfam', 18),
+                            comparisonOutput('redlav', 20)
+                        )
+                    )
                 )
             )
         )

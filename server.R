@@ -147,5 +147,12 @@ shinyServer(function(input, output, clientData, session) {
     output$mortinf <- callModule(comparison, 'mortinf', 5)
     output$asp <- callModule(comparison, 'asp', 8)
     output$incr <- callModule(comparison, 'incr', 22)
-
+    output$fert <- callModule(comparison, 'tum', 10)
+    output$mortinf <- callModule(comparison, 'inc', 11)
+    output$asp <- callModule(comparison, 'cardio', 12)
+    output$incr <- callModule(comparison, 'abb', 13)
+    output$fert <- callModule(comparison, 'terz', 16)
+    output$mortinf <- callModule(comparison, 'unloc', 17)
+    output$asp <- callModule(comparison, 'redfam', 18)
+    output$incr <- callModule(comparison, 'redlav', 20)
 })

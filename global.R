@@ -370,6 +370,7 @@ comparisonOutput <- function(id, ind) {
         collapsible = T,
         collapsed = T,
         solidHeader = T,
+        textOutput(ns("year")),
         tableOutput(ns("table"))
     )
 }
@@ -381,5 +382,12 @@ comparison <- function(input, output, session, id) {
             select(Rank = rank, Geo = descriz, Valore = obsValue)
     },
     include.rownames = F)
+    output$year <- renderText({
+        lastYear <- getData(id) %>% 
+            filter(GEO == 'ITH2' & obsValue != 'NA') %>%
+            summarise(year = max(obsTime)) %>%
+            as.numeric()
+        paste0("Anno di riferimento: ", lastYear)
+    })
 }
 ## End Comparison Module
