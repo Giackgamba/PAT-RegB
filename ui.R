@@ -15,6 +15,7 @@ sectors <- getSectors()
 
 shinyUI(
     dashboardPage(
+        title = "Benchmarking regionale",
         
         # Application title
         dashboardHeader(title = "Benchmarking regionale",
@@ -47,10 +48,7 @@ shinyUI(
                                      c('optionA' = 'A')
                                  )
                 ),
-                #6 menuItem('Regioni',
-                #          icon = icon('bank'),
                 dataTableOutput('NUTS')
-                #  )
             )
         ),
         
@@ -63,10 +61,10 @@ shinyUI(
             tabItems(
                 tabItem(
                     tabName = 'indicatori',
+                    h1(textOutput('title')),
                     fluidRow(
                         tabBox(
                             width = 12,
-                            height = 1250,
                             tabPanel(
                                 'Tabella',
                                 box(title = 'Serie Storica',
@@ -88,9 +86,8 @@ shinyUI(
                         )
                     )
                 ),
-                
                 tabItem(
-                    'dashboard',
+                    tabName = 'dashboard',
                     h1('Dashboard'),
                     fluidRow(
                         box(id = 'good',
@@ -105,17 +102,33 @@ shinyUI(
                             solidHeader = T,
                             tableOutput('textWorst')
                         )
-                    ),
-                    # fluidRow(uiOutput("boxes")),
+                    ),                
+                   
+                     # fluidRow(htmlOutput("boxes")),
                      fluidRow(
-                        comparisonOutput(4),
-                        comparisonOutput(10),
-                         comparisonOutput(5),
-                        # comparisonOutput(10),
-                        # comparisonOutput(11),
-                        # comparisonOutput(12),
-                        comparisonOutput(18)
-                     )
+                         box(id = 'demo',
+                             width = 12,
+                             title = 'Demografia',
+                             collapsible = T,
+                             collapsed = T,
+                             comparisonOutput('fert', 4),
+                             comparisonOutput('mortinf', 5),
+                             comparisonOutput('asp', 8),
+                             comparisonOutput('incr', 22)
+                             ),
+                         box(id = 'salu',
+                             width = 12,
+                             title = 'Salute',
+                             collapsible = T),
+                         box(id = 'ist',
+                             width = 12,
+                             title = 'Istruzione',
+                             collapsible = T),
+                         box(id = 'eco',
+                             width = 12,
+                             title = 'Economia',
+                             collapsible = T)
+                      )
                 )
             )
         )

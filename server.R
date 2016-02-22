@@ -60,25 +60,25 @@ shinyServer(function(input, output, clientData, session) {
         })
     )
     
-    id <- reactive({ 
-        getId(input$ind) 
-    })
-    
-    conceptFilter <- reactive({
-        input$ind
-        getFilters(input$ind) 
-    })
-    
-    filter <- reactive({ 
-        input$ind
-        paste0(conceptFilter(), '.', geoFilter, '.') 
-    })
+    # id <- reactive({ 
+    #     getId(input$ind) 
+    # })
+    # 
+    # conceptFilter <- reactive({
+    #     input$ind
+    #     getFilters(input$ind) 
+    # })
+    # 
+    # filter <- reactive({ 
+    #     input$ind
+    #     paste0(conceptFilter(), '.', geoFilter, '.') 
+    # })
     
     data <- reactive({
         input$ind
         getData(input$ind)
     })
-
+    
     
     observeEvent(
         input$ind,
@@ -101,55 +101,51 @@ shinyServer(function(input, output, clientData, session) {
                     )
                 )
             })
-            )
         )
-        
-        observeEvent(
-            input$ind,
-            output$plot <- renderChart2(
-                ({
-                    data <- data()
-                    p <- makeInteractivePlot(data, input$table_rows_selected)
-                    p$addParams(dom = 'plot')
-                    
-                    return(p)
-                })
-            )
-        )
-        
-        output$textBest <- renderTable({
-            res <- getBestTN() %>%
-                select(Indicatore = ind,
-                       Valore = obsValue,
-                       Rank = rank) %>%
-                arrange(Rank)
-        },
-        include.rownames = F)
-        
-        output$textWorst <- renderTable({
-            res <- getWorstTN() %>%
-                select(Indicatore = ind,
-                       Valore = obsValue,
-                       Rank = rank) %>%
-                arrange(desc(Rank))
-        },
-        include.rownames = F)  
-        
-        
-        # output$boxes <- renderUI(
-        #     lapply(1:nrow(tabIndicators), function(i) {
-        #         callModule(comparison, paste0('comp',i), tabIndicators$nome[i])
-        #     })
-        # )
-        
-
-         output$area <- callModule(comparison, 4, 4)
-         output$popolazione <- callModule(comparison, 10, 10)
-         output$fertilita <- callModule(comparison, 5, 5)
-        # output$mortinf <- callModule(comparison, 10)
-        # output$nati <- callModule(comparison, 11)
-        # output$morti <- callModule(comparison, 12)
-        # output$spevita <- callModule(comparison, 18)
-        
-})
+    )
     
+    observeEvent(
+        input$ind,
+        output$title <- renderText(
+            name <- getIndName(input$ind)
+        )
+    )
+        
+    observeEvent(
+        input$ind,
+        output$plot <- renderChart2(
+            ({
+                data <- data()
+                p <- makeInteractivePlot(data, input$table_rows_selected)
+                p$addParams(dom = 'plot')
+                
+                return(p)
+            })
+        )
+    )
+    
+    output$textBest <- renderTable({
+        res <- getBestTN() %>%
+            select(Indicatore = ind,
+                   Valore = obsValue,
+                   Rank = rank) %>%
+            arrange(Rank)
+    },
+    include.rownames = F)
+    
+    output$textWorst <- renderTable({
+        res <- getWorstTN() %>%
+            select(Indicatore = ind,
+                   Valore = obsValue,
+                   Rank = rank) %>%
+            arrange(desc(Rank))
+    },
+    include.rownames = F)  
+    
+    
+    output$fert <- callModule(comparison, 'fert', 4)
+    output$mortinf <- callModule(comparison, 'mortinf', 5)
+    output$asp <- callModule(comparison, 'asp', 8)
+    output$incr <- callModule(comparison, 'incr', 22)
+
+})

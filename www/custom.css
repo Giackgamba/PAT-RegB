@@ -5,6 +5,12 @@
   font-weight: bold;
   font-size: 24px;
   background-color: #670724;
+  position: fixed;
+}
+
+.skin-blue .main-header .navbar-static-top {
+    position: fixed;
+    width: 100%;
 }
 
 .skin-blue .main-header .logo:hover {
@@ -15,6 +21,7 @@
   font-family: "Titillium Web", sans-serif;
   background-color: #8B1F3F;
 }
+
 
 .skin-blue .main-header .navbar .sidebar-toggle:hover {
     background-color: #670724;
@@ -45,6 +52,10 @@ h1 {
     color: #fff;
 }
 
+.content-wrapper {
+    margin-top: 30px;
+}
+
 .skin-blue .sidebar-menu>li.active>a, .skin-blue .sidebar-menu>li:hover>a {
     border-left-color: #8B1F3F;
 }
@@ -57,4 +68,11 @@ h1 {
 
 .nav-tabs-custom>.nav-tabs>li.active {
     border-top-color: #8B1F3F;
+}
+
+.sidebar {
+    width: 380px;
+    position: fixed;
+    white-space: nowrap;
+    overflow: visible;
 }

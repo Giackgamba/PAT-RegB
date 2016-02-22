@@ -64,7 +64,15 @@ downloadData <- function(id) {
                      key,
                      filter,
                      sep = "/")
-    data <- as.data.frame(readSDMX(dataUrl))
+    tryCatch(
+        {
+            data <- as.data.frame(readSDMX(dataUrl))
+        },
+        warning = {
+            dataUrl <- sub('MT', 'MT00', dataUrl)
+            data <- as.data.frame(readSDMX(dataUrl))
+        }
+    )
     write.csv2(data, paste0("backupData/", key, "-", id, ".csv"), row.names = F)
     return(data)
 }
@@ -97,10 +105,14 @@ getData <- function(id) {
             difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
         if (!old)
             data <- getDataOffline(id)
-    }
-    else
-        data <- downloadData(id)
+    } else data <- downloadData(id)
+    
+    lastYear <- data %>% 
+        filter(GEO == 'ITH2' & obsValue != 'NA') %>%
+        summarise(year = max(obsTime)) %>%
+        as.numeric()
     data <- data %>% 
+        filter(obsTime <= lastYear & obsValue != 'NA') %>%
         select(obsTime, GEO, obsValue) %>%
         group_by(obsTime, GEO) %>%
         summarise(obsValue = sum(obsValue)) %>%
@@ -210,9 +222,17 @@ getIndicatorsList <- function(idSector = NULL) {
 
 ##
 getIndName <- function(key) {
-    indicator <- tabIndicators %>%
-        filter(nome == key) %>%
-        select(descriz)
+    if (!is.na(as.numeric(key))) {
+        indicator <- tabIndicators %>%
+            filter(idDataFlow == key) %>%
+            select(descriz) %>%
+            as.character()
+    } else {
+        indicator <- tabIndicators %>%
+            filter(nome == key) %>%
+            select(descriz) %>%
+            as.character()
+    }
     return(indicator)
 }
 
@@ -243,12 +263,14 @@ makeInteractivePlot <- function(data, selected) {
     p$yAxis(title = list(text = "Valore",
                          format = "{point.y:,.0f}"))
     p$colors(colors)
-    cat(selected)
+    
     selected <- pivotData(data)[selected, 1]
+    
     # Black Magic
     p$params$series = lapply(seq_along(p$params$series), function(i) {
+        
         x = p$params$series[[i]]
-        x$visible = x$name %in% selected
+        x$visible = x$name %in% selected$GEO
         return(x)
     })
     return(p)
@@ -273,7 +295,7 @@ getWholeData <- function() {
 getRank <- function(id) {
     direction <- filter(tabIndicators, idDataFlow == id) %>%
         select(direction) %>%
-        as.character(.)
+        as.character()
     
     df <- getData(id) %>%
         filter(obsTime == max(obsTime)) %>%
@@ -282,9 +304,10 @@ getRank <- function(id) {
             ifelse(dir == "-", 
                    rank(obsValue), 
                    rank(desc(obsValue))
-            ) 
+            )
+        ) 
         )
-        )
+    df
 }
 
 getBestTN <- function() {
@@ -324,31 +347,30 @@ getWorstTN <- function() {
 getComparison <- function(id) {
     df <-  getRank(id) %>%
         mutate(ind = id) %>%
-        filter(GEO == 'ITH2' | rank %in% c(1,2,11,12)) %>%
+        filter(GEO == 'ITH2' | rank %in% c(1, 2, nrow(.)-1, nrow(.))) %>%
+        inner_join(tabNUTS, by = c('GEO' = 'id')) %>%
+        select(rank, descriz, obsValue) %>%
         arrange(rank)
     df
 }
 
 ## Start Comparison Module
 ## Comparison UI
-comparisonOutput <- function(id) {
+comparisonOutput <- function(id, ind) {
     ns <- NS(id)
-
+    
     nome <- tabIndicators %>% 
-        filter(idDataFlow == id) %>%
+        filter(idDataFlow == ind) %>%
         select(descriz) %>%
         as.character(.)
     
-    tagList(
-        box(id = id,
-            title = nome,
-            width = 4,
-            collapsible = T,
-            collapsed = F,
-            solidHeader = T,
-            
-            tableOutput(ns("table"))
-        )
+    box(id = id,
+        title = nome,
+        width = 6,
+        collapsible = T,
+        collapsed = T,
+        solidHeader = T,
+        tableOutput(ns("table"))
     )
 }
 
@@ -356,7 +378,7 @@ comparisonOutput <- function(id) {
 comparison <- function(input, output, session, id) {
     output$table <- renderTable({
         getComparison(id) %>%
-            select(Rank = rank, Geo = GEO, Valore = obsValue)
+            select(Rank = rank, Geo = descriz, Valore = obsValue)
     },
     include.rownames = F)
 }
