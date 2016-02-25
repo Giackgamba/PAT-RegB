@@ -12,7 +12,6 @@ library(RODBC)
 library(DT)
 library(rCharts)
 
-
 ## Read system tables, always offline
 tabIndicators <-
     read.csv2("backupData/tabIndicatori.csv", stringsAsFactors = F)
@@ -68,9 +67,10 @@ downloadData <- function(id) {
         {
             data <- as.data.frame(readSDMX(dataUrl))
         },
-        warning = {
+        warning = function(e) {
             dataUrl <- sub('MT', 'MT00', dataUrl)
             data <- as.data.frame(readSDMX(dataUrl))
+            return(data)
         }
     )
     write.csv2(data, paste0("backupData/", key, "-", id, ".csv"), row.names = F)
@@ -142,8 +142,8 @@ pivotData <- function(x) {
 }
 
 ## Helper to obtain the string to insert (manually) in the DB
-getConceptsForSQL <- function(key) {
-    lev <- levels(downloadConcepts(key)$id)
+getConceptsForSQL <- function(id) {
+    lev <- levels(downloadConcepts(id)$id)
     a <- head(lev,-6) %>%
         paste(collapse = ".")
     return(a)
@@ -320,7 +320,7 @@ getBestTN <- function() {
                       FUN = function(x){
                           d <- getRank(as.integer(x['idDataFlow'])) %>%
                               mutate(ind = x['descriz']) %>%
-                              filter(GEO == 'ITH2' & rank<=6) 
+                              filter(GEO == 'ITH2' & rank<=5) 
                       }
                   )
     )
@@ -337,7 +337,7 @@ getWorstTN <- function() {
                       FUN = function(x){
                           d <- getRank(as.integer(x['idDataFlow'])) %>%
                               mutate(ind = x['descriz']) %>%
-                              filter(GEO == 'ITH2' & rank>=7)
+                              filter(GEO == 'ITH2' & rank>=9)
                       }
                   )
     )

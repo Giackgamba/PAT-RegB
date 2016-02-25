@@ -140,6 +140,17 @@ shinyUI(
                             comparisonOutput('unloc', 17),
                             comparisonOutput('redfam', 18),
                             comparisonOutput('redlav', 20)
+                        ),
+                        box(id = 'lav',
+                            width = 12,
+                            title = 'Mercato del lavoro',
+                            collapsible = T,
+                            collapsed = T,
+                            comparisonOutput('att', 23),
+                            comparisonOutput('occ', 24),
+                            comparisonOutput('disoc', 25),
+                            comparisonOutput('disocgio', 28),
+                            comparisonOutput('partt', 29)
                         )
                     )
                 )
