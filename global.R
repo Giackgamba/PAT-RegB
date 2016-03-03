@@ -320,7 +320,7 @@ getBestTN <- function() {
                       FUN = function(x){
                           d <- getRank(as.integer(x['idDataFlow'])) %>%
                               mutate(ind = x['descriz']) %>%
-                              filter(GEO == 'ITH2' & rank<=5) 
+                              filter(GEO == 'ITH2' & rank<=3) 
                       }
                   )
     )
@@ -337,7 +337,7 @@ getWorstTN <- function() {
                       FUN = function(x){
                           d <- getRank(as.integer(x['idDataFlow'])) %>%
                               mutate(ind = x['descriz']) %>%
-                              filter(GEO == 'ITH2' & rank>=9)
+                              filter(GEO == 'ITH2' & rank>=10)
                       }
                   )
     )

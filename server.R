@@ -8,7 +8,6 @@
 library(shiny)
 library(rCharts)
 library(DT)
-library(knitr)
 library(dplyr)
 source('global.R')
 
@@ -131,7 +130,8 @@ shinyServer(function(input, output, clientData, session) {
                    Rank = rank) %>%
             arrange(Rank)
     },
-    include.rownames = F)
+    include.rownames = F,
+    digits = c(0,0,1,0))
     
     output$textWorst <- renderTable({
         res <- getWorstTN() %>%
@@ -140,7 +140,8 @@ shinyServer(function(input, output, clientData, session) {
                    Rank = rank) %>%
             arrange(desc(Rank))
     },
-    include.rownames = F)  
+    include.rownames = F,
+    digits = c(0,0,1,0))  
     
     
     output$fert <- callModule(comparison, 'fert', 4)
