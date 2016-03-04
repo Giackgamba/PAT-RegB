@@ -8,9 +8,16 @@ library(tidyr)
 ## library to read form DB
 library(RODBC)
 
-## libraries for interactive plot and table
+## libraries for interactive plot, table and map
 library(DT)
 library(rCharts)
+library(leaflet)
+library(rgdal)
+
+### TO DO
+EU_NUTS <- readOGR("U:/AreaComune/Programmi/QGIS/Shapefiles/EU_NUTS/NUTS_BN_01M_2013.shp",
+leaflet(EU_NUTS) %>% addPolylines(weight = 1)
+
 
 ## Read system tables, always offline
 tabIndicators <-
@@ -105,34 +112,52 @@ getData <- function(id) {
             difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
         if (!old)
             data <- getDataOffline(id)
+        else data <- downloadData(id)
     } else data <- downloadData(id)
     
     lastYear <- data %>% 
         filter(GEO == 'ITH2' & obsValue != 'NA') %>%
         summarise(year = max(obsTime)) %>%
         as.numeric()
+    direction <- filter(tabIndicators, idDataFlow == id) %>%
+        select(direction) %>%
+        as.character()
     data <- data %>% 
         filter(obsTime <= lastYear & obsValue != 'NA') %>%
         select(obsTime, GEO, obsValue) %>%
         group_by(obsTime, GEO) %>%
         summarise(obsValue = sum(obsValue)) %>%
         ungroup()
-    return(data)
+    return(list(data,lastYear,direction))
 }
 
 ## Transform the data to have vertical year and horizontal Geo
 pivotData <- function(x) {
-    if (all(c("GEO", "obsTime", "obsValue") %in% names(x))) {
-        res <- x %>%
+    
+    data <- x[[1]]
+    dir <- x[[3]]
+    img <- "<img src=\"arrow_DIR.svg\" height=\"16\" width = \"16\"></img>"
+    
+    if (all(c("GEO", "obsTime", "obsValue") %in% names(data))) {
+        res <- data %>%
             select(GEO, obsTime, obsValue) %>%
             spread(obsTime, obsValue) %>%
             .[, c(1, (ncol(.) - ifelse(ncol(.)>8, 8, ncol(.)-2)):ncol(.))] %>%
             mutate(
-                img = ifelse(
-                    .[, ncol(.)] > .[, ncol(.)-1],
-                    "<img src=\"uparrow137.svg\" height=\"16\" width = \"16\"></img>",
-                    "<img src=\"downarrow103.svg\" height=\"16\" width = \"16\"></img>"
-                )
+                img = 
+                    ifelse(
+                        .[, ncol(.)] > .[, ncol(.)-1],
+                        ifelse(
+                            dir == "+",
+                            sub("DIR", "up_green", img),
+                            sub("DIR", "up_red", img)
+                        ),
+                        ifelse(
+                            dir == "+",
+                            sub("DIR", "down_red", img),
+                            sub("DIR", "down_green", img)
+                        )
+                    )
             ) %>%
             arrange(GEO)
         
@@ -238,7 +263,7 @@ getIndName <- function(key) {
 
 ## Build the plot
 makeInteractivePlot <- function(data, selected) {
-    data <- select(data, GEO, obsValue, obsTime) %>%
+    dataz <- select(data[[1]], GEO, obsValue, obsTime) %>%
         mutate(obsTime = as.numeric(obsTime))
     
     colors <- colorRampPalette(
@@ -251,14 +276,14 @@ makeInteractivePlot <- function(data, selected) {
     p <- hPlot(
         y = "obsValue",
         x = "obsTime",
-        data = data,
+        data = dataz,
         type = "line",
         group = "GEO",
         color = "red",
         radius = 0
     )
     p$chart(zoomType = "xy")
-    p$xAxis(categories = data$obsTime,
+    p$xAxis(categories = dataz$obsTime,
             title = list(text = "Anno"))
     p$yAxis(title = list(text = "Valore",
                          format = "{point.y:,.0f}"))
@@ -282,7 +307,7 @@ getWholeData <- function() {
     
     df <- sapply(
         indicators$idDataFlow, FUN = function(x)
-            x =  getData(x)
+            x =  getData(x)[[1]]
     )
     names(df) <- indicators$nome
     df <-
@@ -297,7 +322,7 @@ getRank <- function(id) {
         select(direction) %>%
         as.character()
     
-    df <- getData(id) %>%
+    df <- getData(id)[[1]] %>%
         filter(obsTime == max(obsTime)) %>%
         mutate(dir = direction) %>%
         mutate(rank = as.integer(
@@ -367,8 +392,6 @@ comparisonOutput <- function(id, ind) {
     box(id = id,
         title = nome,
         width = 6,
-        collapsible = T,
-        collapsed = T,
         solidHeader = T,
         textOutput(ns("year")),
         tableOutput(ns("table"))
@@ -383,7 +406,7 @@ comparison <- function(input, output, session, id) {
     },
     include.rownames = F)
     output$year <- renderText({
-        lastYear <- getData(id) %>% 
+        lastYear <- getData(id)[[1]] %>% 
             filter(GEO == 'ITH2' & obsValue != 'NA') %>%
             summarise(year = max(obsTime)) %>%
             as.numeric()

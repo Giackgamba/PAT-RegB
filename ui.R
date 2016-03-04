@@ -72,7 +72,8 @@ shinyUI(
                                 width = 12,
                                 #height = '100%',
                                 DT::dataTableOutput('table')
-                            )
+                            ),
+                            "*: la variazione fa riferimento all'anno precedente"
                         ),
                         tabPanel(
                             'Grafico',
@@ -88,6 +89,7 @@ shinyUI(
                 tabItem(
                     tabName = 'dashboard',
                     h1('Dashboard'),
+                    height = 1500,
                     fluidRow(
                         box(id = 'good',
                             width = 6,
@@ -104,53 +106,45 @@ shinyUI(
                     ),                
                     
                     # fluidRow(htmlOutput("boxes")),
-                    fluidRow(
-                        box(id = 'demo',
-                            width = 12,
-                            title = 'Demografia',
-                            collapsible = T,
-                            collapsed = T,
-                            comparisonOutput('fert', 4),
-                            comparisonOutput('mortinf', 5),
-                            comparisonOutput('asp', 8),
-                            comparisonOutput('incr', 22)
+                    tabBox(
+                        width = 12,
+                        height = 950,
+                        tabPanel(id = 'demo',
+                                 width = 12,
+                                 title = 'Demografia',
+                                 comparisonOutput('fert', 4),
+                                 comparisonOutput('mortinf', 5),
+                                 comparisonOutput('asp', 8),
+                                 comparisonOutput('incr', 22)
                         ),
-                        box(id = 'salu',
-                            width = 12,
-                            title = 'Salute',
-                            collapsible = T,
-                            collapsed = T,
-                            comparisonOutput('tum', 10),
-                            comparisonOutput('inc', 11),
-                            comparisonOutput('cardio', 12)
+                        tabPanel(id = 'salu',
+                                 width = 12,
+                                 title = 'Salute',
+                                 comparisonOutput('tum', 10),
+                                 comparisonOutput('inc', 11),
+                                 comparisonOutput('cardio', 12)
                         ),
-                        box(id = 'ist',
-                            width = 12,
-                            title = 'Istruzione',
-                            collapsible = T,
-                            collapsed = T,
-                            comparisonOutput('abb', 13),
-                            comparisonOutput('terz', 16)
+                        tabPanel(id = 'ist',
+                                 width = 12,
+                                 title = 'Istruzione',
+                                 comparisonOutput('abb', 13),
+                                 comparisonOutput('terz', 16)
                         ),
-                        box(id = 'eco',
-                            width = 12,
-                            title = 'Economia',
-                            collapsible = T,
-                            collapsed = T,
-                            comparisonOutput('unloc', 17),
-                            comparisonOutput('redfam', 18),
-                            comparisonOutput('redlav', 20)
+                        tabPanel(id = 'eco',
+                                 width = 12,
+                                 title = 'Economia',
+                                 comparisonOutput('unloc', 17),
+                                 comparisonOutput('redfam', 18),
+                                 comparisonOutput('redlav', 20)
                         ),
-                        box(id = 'lav',
-                            width = 12,
-                            title = 'Mercato del lavoro',
-                            collapsible = T,
-                            collapsed = T,
-                            comparisonOutput('att', 23),
-                            comparisonOutput('occ', 24),
-                            comparisonOutput('disoc', 25),
-                            comparisonOutput('disocgio', 28),
-                            comparisonOutput('partt', 29)
+                        tabPanel(id = 'lav',
+                                 width = 12,
+                                 title = 'Mercato del lavoro',
+                                 comparisonOutput('att', 23),
+                                 comparisonOutput('occ', 24),
+                                 comparisonOutput('disoc', 25),
+                                 comparisonOutput('disocgio', 28),
+                                 comparisonOutput('partt', 29)
                         )
                     )
                 )

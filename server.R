@@ -59,20 +59,10 @@ shinyServer(function(input, output, clientData, session) {
         })
     )
     
-    # id <- reactive({ 
-    #     getId(input$ind) 
-    # })
-    # 
-    # conceptFilter <- reactive({
-    #     input$ind
-    #     getFilters(input$ind) 
-    # })
-    # 
-    # filter <- reactive({ 
-    #     input$ind
-    #     paste0(conceptFilter(), '.', geoFilter, '.') 
-    # })
-    
+    id <- reactive({
+        getId(input$ind)
+    })
+
     data <- reactive({
         input$ind
         getData(input$ind)
@@ -94,7 +84,7 @@ shinyServer(function(input, output, clientData, session) {
                     options = list(
                         columnDefs = list(
                             list(orderable = FALSE, 
-                                 title = "",
+                                 title = "*",
                                  targets = -1)
                         )
                     )

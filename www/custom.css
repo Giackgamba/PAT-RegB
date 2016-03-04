@@ -76,3 +76,7 @@ h1 {
     white-space: nowrap;
     overflow: visible;
 }
+
+.content-wrapper {
+    min-height: 1350px !important;
+}
