@@ -48,7 +48,8 @@ shinyUI(
                                      c('optionA' = 'A')
                                  )
                 ),
-                dataTableOutput('NUTS')
+                dataTableOutput('NUTS'),
+                leafletOutput("map")
             )
         ),
         

@@ -80,3 +80,7 @@ h1 {
 .content-wrapper {
     min-height: 1350px !important;
 }
+
+.leaflet-container {
+    background: #ddd;
+}

@@ -151,4 +151,6 @@ shinyServer(function(input, output, clientData, session) {
     output$incr <- callModule(comparison, 'disoc', 25)
     output$incr <- callModule(comparison, 'disocgio', 28)
     output$incr <- callModule(comparison, 'partt', 29)
+    
+    output$map <- renderLeaflet(makeMap())
 })

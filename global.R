@@ -14,9 +14,7 @@ library(rCharts)
 library(leaflet)
 library(rgdal)
 
-### TO DO
-EU_NUTS <- readOGR("U:/AreaComune/Programmi/QGIS/Shapefiles/EU_NUTS/NUTS_BN_01M_2013.shp",
-leaflet(EU_NUTS) %>% addPolylines(weight = 1)
+
 
 
 ## Read system tables, always offline
@@ -27,6 +25,14 @@ tabConcepts <-
     read.csv2("backupData/tabConcepts.csv", stringsAsFactors = F)
 tabSettori <-
     read.csv2("backupData/tabSettori.csv", stringsAsFactors = F)
+
+#Map data
+NUTS2 <- readOGR("Shapefile/NUTS_RG_01M_2013.shp", 
+                 layer = "NUTS_RG_01M_2013", 
+                 verbose = F, 
+                 stringsAsFactors = F)
+NUTS2 <- subset(NUTS2, NUTS2@data$STAT_LEVL_ == 2)
+NUTS2_SP <- subset(NUTS2, NUTS2@data$NUTS_ID %in% tabNUTS$id)
 
 ## Get the ind key, from ind id
 getKey <- function(id) {
@@ -394,7 +400,8 @@ comparisonOutput <- function(id, ind) {
         width = 6,
         solidHeader = T,
         textOutput(ns("year")),
-        tableOutput(ns("table"))
+        tableOutput(ns("table")),
+        actionButton(inputId = ns("appr"), label = "approfondisci")
     )
 }
 
@@ -404,7 +411,16 @@ comparison <- function(input, output, session, id) {
         getComparison(id) %>%
             select(Rank = rank, Geo = descriz, Valore = obsValue)
     },
-    include.rownames = F)
+    include.rownames = F
+    )
+    ## TO DO
+    # observeEvent(input$appr, {
+    #     print("asd")
+    #     updateTabItems(session, "sidebarmenu", "indicatori")
+    #     updateSelectInput(session, "ind", id)
+    #     print(environment())
+    # }, handler.env = globalenv()
+    )
     output$year <- renderText({
         lastYear <- getData(id)[[1]] %>% 
             filter(GEO == 'ITH2' & obsValue != 'NA') %>%
@@ -412,5 +428,23 @@ comparison <- function(input, output, session, id) {
             as.numeric()
         paste0("Anno di riferimento: ", lastYear)
     })
+    
 }
 ## End Comparison Module
+
+### Mappe
+
+makeMap <- function() {
+    
+    leaflet() %>% 
+        fitBounds( -2, 35, 12, 55) %>%
+        #addProviderTiles("Stamen.Toner") %>%
+        addPolygons(data = NUTS2_ALL, 
+                    weight = 1, 
+                    color = 'grey'
+        ) %>%
+        addPolygons(data = NUTS2_SP,
+                    weight = 2,
+                    color = #8B1F3F
+        )
+}
