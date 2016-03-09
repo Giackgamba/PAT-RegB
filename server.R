@@ -62,7 +62,7 @@ shinyServer(function(input, output, clientData, session) {
     id <- reactive({
         getId(input$ind)
     })
-
+    
     data <- reactive({
         input$ind
         getData(input$ind)
@@ -99,7 +99,7 @@ shinyServer(function(input, output, clientData, session) {
             name <- getIndName(input$ind)
         )
     )
-        
+    
     observeEvent(
         input$ind,
         output$plot <- renderChart2(
@@ -153,4 +153,6 @@ shinyServer(function(input, output, clientData, session) {
     output$incr <- callModule(comparison, 'partt', 29)
     
     output$map <- renderLeaflet(makeMap())
+    
 })
+    

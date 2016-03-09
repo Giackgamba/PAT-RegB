@@ -72,7 +72,6 @@ h1 {
 
 .sidebar {
     width: 380px;
-    position: fixed;
     white-space: nowrap;
     overflow: visible;
 }
@@ -83,4 +82,9 @@ h1 {
 
 .leaflet-container {
     background: #ddd;
+}
+
+
+.nav-tabs-custom>.nav-tabs {
+    background: #e6e6e6;
 }

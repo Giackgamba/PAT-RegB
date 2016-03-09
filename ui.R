@@ -18,7 +18,7 @@ shinyUI(
         title = "Benchmarking regionale",
         
         # Application title
-        dashboardHeader(title = "Benchmarking regionale",
+        dashboardHeader(title = HTML("<img src=\"logoISPAT.png \"/>Benchmarking regionale"),
                         titleWidth = 380
         ),
         
@@ -90,6 +90,7 @@ shinyUI(
                 tabItem(
                     tabName = 'dashboard',
                     h1('Dashboard'),
+                    #actionButton(inputId = "appr", label = "approfondisci"),
                     height = 1500,
                     fluidRow(
                         box(id = 'good',
@@ -109,7 +110,7 @@ shinyUI(
                     # fluidRow(htmlOutput("boxes")),
                     tabBox(
                         width = 12,
-                        height = 950,
+                        height = 900, color = 'grey',
                         tabPanel(id = 'demo',
                                  width = 12,
                                  title = 'Demografia',

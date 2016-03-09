@@ -78,22 +78,34 @@ downloadData <- function(id) {
                      sep = "/")
     tryCatch(
         {
-            data <- as.data.frame(readSDMX(dataUrl))
+            dataz <- as.data.frame(readSDMX(dataUrl))
+            print("primo try")
+            write.csv2(dataz, 
+                       paste0("backupData/", 
+                              key, "-", 
+                              id, ".csv"), 
+                       row.names = F)
         },
-        warning = function(e) {
+        warning = function(w) {
+            print("warning")
             dataUrl <- sub('MT', 'MT00', dataUrl)
-            data <- as.data.frame(readSDMX(dataUrl))
-            return(data)
+            dataz <- as.data.frame(readSDMX(dataUrl))
+            write.csv2(dataz, 
+                       paste0("backupData/", 
+                              key, "-", 
+                              id, ".csv"), 
+                       row.names = F)
+
         }
     )
-    write.csv2(data, paste0("backupData/", key, "-", id, ".csv"), row.names = F)
-    return(data)
+    
+    #return(dataz)
 }
 
 ## Read the indicator file
 getDataOffline <- function(id) {
     key <- getKey(id)
-    data <- read.csv2(
+    dataz <- read.csv2(
         paste0("backupData/", key, "-", id, ".csv"),
         stringsAsFactors = F,
         quote = "\""
@@ -101,12 +113,12 @@ getDataOffline <- function(id) {
     # read.csv2 trasforma le colonne 'T' in booleane
     # quindi li ritrasformiamo in character
     # (non che quelle colonne siano utilizzate)
-    data[,sapply(data,class) == "logical"] <-
-        sapply(data[,sapply(data,class) == "logical"],
+    dataz[,sapply(dataz,class) == "logical"] <-
+        sapply(dataz[,sapply(dataz,class) == "logical"],
                function(i)
                    substr(as.character(i),1,1))
     
-    return(data)
+    return(dataz)
 }
 
 ## Wrapper, read from offline or download if older than 10 days
@@ -115,26 +127,26 @@ getData <- function(id) {
     file <- paste0("backupData/", key, "-", id, ".csv")
     if (file.exists(file)) {
         old <-
-            difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
+            difftime(Sys.time(), file.info(file)$mtime, units = "days") > 1000
         if (!old)
-            data <- getDataOffline(id)
-        else data <- downloadData(id)
-    } else data <- downloadData(id)
+            dataz <- getDataOffline(id)
+        else dataz <- downloadData(id)
+    } else dataz <- downloadData(id)
     
-    lastYear <- data %>% 
+    lastYear <- dataz %>% 
         filter(GEO == 'ITH2' & obsValue != 'NA') %>%
         summarise(year = max(obsTime)) %>%
         as.numeric()
     direction <- filter(tabIndicators, idDataFlow == id) %>%
         select(direction) %>%
         as.character()
-    data <- data %>% 
+    dataz <- dataz %>% 
         filter(obsTime <= lastYear & obsValue != 'NA') %>%
         select(obsTime, GEO, obsValue) %>%
         group_by(obsTime, GEO) %>%
         summarise(obsValue = sum(obsValue)) %>%
         ungroup()
-    return(list(data,lastYear,direction))
+    return(list(dataz,lastYear,direction))
 }
 
 ## Transform the data to have vertical year and horizontal Geo
@@ -413,13 +425,11 @@ comparison <- function(input, output, session, id) {
     },
     include.rownames = F
     )
-    ## TO DO
-    # observeEvent(input$appr, {
-    #     print("asd")
-    #     updateTabItems(session, "sidebarmenu", "indicatori")
-    #     updateSelectInput(session, "ind", id)
-    #     print(environment())
-    # }, handler.env = globalenv()
+    observeEvent(input$appr, {
+        print("click detected")
+        updateSelectInput(session, "ind", selected = "22")
+        updateTabItems(session, "sidebarmenu", "indicatori")
+    }
     )
     output$year <- renderText({
         lastYear <- getData(id)[[1]] %>% 
@@ -439,7 +449,7 @@ makeMap <- function() {
     leaflet() %>% 
         fitBounds( -2, 35, 12, 55) %>%
         #addProviderTiles("Stamen.Toner") %>%
-        addPolygons(data = NUTS2_ALL, 
+        addPolygons(data = NUTS2, 
                     weight = 1, 
                     color = 'grey'
         ) %>%
@@ -448,3 +458,4 @@ makeMap <- function() {
                     color = #8B1F3F
         )
 }
+
