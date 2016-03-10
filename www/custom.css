@@ -84,7 +84,15 @@ h1 {
     background: #ddd;
 }
 
-
 .nav-tabs-custom>.nav-tabs {
     background: #e6e6e6;
+}
+
+.leaflet-popup-content {
+    color: black;
+    margin: 0 4px 0 4px;
+}
+
+#DataTables_Table_0 tbody th, #DataTables_Table_0 tbody td {
+    padding: 2px 2px !important;
 }

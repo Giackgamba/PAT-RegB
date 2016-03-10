@@ -18,7 +18,7 @@ shinyUI(
         title = "Benchmarking regionale",
         
         # Application title
-        dashboardHeader(title = HTML("<img src=\"logoISPAT.png \"/>Benchmarking regionale"),
+        dashboardHeader(title = HTML("<img src=\"logoISPAT.svg\" width=70 heigth=35 />Benchmarking regionale"),
                         titleWidth = 380
         ),
         
@@ -27,7 +27,7 @@ shinyUI(
             width = 380,
             sidebarMenu(
                 id = 'sidebarmenu',
-                menuItem('Dashboard',
+                menuItem('Cruscotto generale',
                          tabName = 'dashboard',
                          icon = icon('dashboard')
                 ),
@@ -89,7 +89,13 @@ shinyUI(
                 ),
                 tabItem(
                     tabName = 'dashboard',
-                    h1('Dashboard'),
+                    h1('Cruscotto generale'),
+                    wellPanel(
+                            selectInput("anno", 
+                                        "Scegli anno:", 
+                                        choices = c(2010,2011,2012,2013,2014),
+                                        selected = 2014)
+                    ),
                     #actionButton(inputId = "appr", label = "approfondisci"),
                     height = 1500,
                     fluidRow(
@@ -107,46 +113,46 @@ shinyUI(
                         )
                     ),                
                     
-                    # fluidRow(htmlOutput("boxes")),
+                    h1("Il benchmarking per settore"),
                     tabBox(
                         width = 12,
-                        height = 900, color = 'grey',
+                        height = 850, color = 'grey',
                         tabPanel(id = 'demo',
                                  width = 12,
                                  title = 'Demografia',
-                                 comparisonOutput('fert', 4),
-                                 comparisonOutput('mortinf', 5),
-                                 comparisonOutput('asp', 8),
-                                 comparisonOutput('incr', 22)
+                                 comparisonUi('fert', 4),
+                                 comparisonUi('mortinf', 5),
+                                 comparisonUi('asp', 8),
+                                 comparisonUi('incr', 22)
                         ),
                         tabPanel(id = 'salu',
                                  width = 12,
                                  title = 'Salute',
-                                 comparisonOutput('tum', 10),
-                                 comparisonOutput('inc', 11),
-                                 comparisonOutput('cardio', 12)
+                                 comparisonUi('tum', 10),
+                                 comparisonUi('inc', 11),
+                                 comparisonUi('cardio', 12)
                         ),
                         tabPanel(id = 'ist',
                                  width = 12,
                                  title = 'Istruzione',
-                                 comparisonOutput('abb', 13),
-                                 comparisonOutput('terz', 16)
+                                 comparisonUi('abb', 13),
+                                 comparisonUi('terz', 16)
                         ),
                         tabPanel(id = 'eco',
                                  width = 12,
                                  title = 'Economia',
-                                 comparisonOutput('unloc', 17),
-                                 comparisonOutput('redfam', 18),
-                                 comparisonOutput('redlav', 20)
+                                 comparisonUi('unloc', 17),
+                                 comparisonUi('redfam', 18),
+                                 comparisonUi('redlav', 20)
                         ),
                         tabPanel(id = 'lav',
                                  width = 12,
                                  title = 'Mercato del lavoro',
-                                 comparisonOutput('att', 23),
-                                 comparisonOutput('occ', 24),
-                                 comparisonOutput('disoc', 25),
-                                 comparisonOutput('disocgio', 28),
-                                 comparisonOutput('partt', 29)
+                                 comparisonUi('att', 23),
+                                 comparisonUi('occ', 24),
+                                 comparisonUi('disoc', 25),
+                                 comparisonUi('disocgio', 28),
+                                 comparisonUi('partt', 29)
                         )
                     )
                 )

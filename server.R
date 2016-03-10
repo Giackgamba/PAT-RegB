@@ -38,13 +38,7 @@ shinyServer(function(input, output, clientData, session) {
         datatable(
             getGEO(),
             escape = FALSE,
-            rownames = FALSE,
-            options = list(
-                columnDefs = list(
-                    list(width = '30%',
-                         targets = c(0,1,2))
-                )
-            )
+            rownames = FALSE
         )  %>%
             formatStyle(
                 columns = 1:3, 
@@ -80,6 +74,7 @@ shinyServer(function(input, output, clientData, session) {
                     selection = list(mode = "multiple", 
                                      selected = c(5,6)
                     ),
+                    #rownames = FALSE,
                     escape = FALSE,
                     options = list(
                         columnDefs = list(
@@ -138,7 +133,7 @@ shinyServer(function(input, output, clientData, session) {
     output$mortinf <- callModule(comparison, 'mortinf', 5)
     output$asp <- callModule(comparison, 'asp', 8)
     output$incr <- callModule(comparison, 'incr', 22)
-    output$fert <- callModule(comparison, 'tum', 10)
+    output$tum <- callModule(comparison, 'tum', 10)
     output$mortinf <- callModule(comparison, 'inc', 11)
     output$asp <- callModule(comparison, 'cardio', 12)
     output$incr <- callModule(comparison, 'abb', 13)
@@ -146,7 +141,7 @@ shinyServer(function(input, output, clientData, session) {
     output$mortinf <- callModule(comparison, 'unloc', 17)
     output$asp <- callModule(comparison, 'redfam', 18)
     output$incr <- callModule(comparison, 'redlav', 20)
-    output$incr <- callModule(comparison, 'att', 23)
+    output$att <- callModule(comparison, 'att', 23)
     output$incr <- callModule(comparison, 'occ', 24)
     output$incr <- callModule(comparison, 'disoc', 25)
     output$incr <- callModule(comparison, 'disocgio', 28)

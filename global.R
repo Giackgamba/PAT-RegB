@@ -27,11 +27,11 @@ tabSettori <-
     read.csv2("backupData/tabSettori.csv", stringsAsFactors = F)
 
 #Map data
-NUTS2 <- readOGR("Shapefile/NUTS_RG_01M_2013.shp", 
-                 layer = "NUTS_RG_01M_2013", 
+NUTS2 <- readOGR("Shapefile/NUTS_RG_10M_2013.shp", 
+                 layer = "NUTS_RG_10M_2013", 
                  verbose = F, 
                  stringsAsFactors = F)
-NUTS2 <- subset(NUTS2, NUTS2@data$STAT_LEVL_ == 2)
+NUTS2_ALL <- subset(NUTS2, NUTS2@data$STAT_LEVL_ == 2)
 NUTS2_SP <- subset(NUTS2, NUTS2@data$NUTS_ID %in% tabNUTS$id)
 
 ## Get the ind key, from ind id
@@ -95,7 +95,7 @@ downloadData <- function(id) {
                               key, "-", 
                               id, ".csv"), 
                        row.names = F)
-
+            
         }
     )
     
@@ -231,15 +231,15 @@ getGEOFilters <- function() {
 getGEO <- function() {
     filters <- tabNUTS %>%
         transmute(
-            id,
-            Regione = descriz,
-            Stato = paste0(
+            id,Stato = paste0(
                 "<img src=\"",
                 stato,
                 ".png\" height=\"24\" width = \"24\" alt = \"",
                 stato,
                 "\"></img>"
-            )
+            ),
+            Regione = descriz
+            
         )
     return(filters)
 }
@@ -399,7 +399,7 @@ getComparison <- function(id) {
 
 ## Start Comparison Module
 ## Comparison UI
-comparisonOutput <- function(id, ind) {
+comparisonUi <- function(id, ind) {
     ns <- NS(id)
     
     nome <- tabIndicators %>% 
@@ -413,49 +413,65 @@ comparisonOutput <- function(id, ind) {
         solidHeader = T,
         textOutput(ns("year")),
         tableOutput(ns("table")),
-        actionButton(inputId = ns("appr"), label = "approfondisci")
+        actionButton(ns("appr"), "approfondisci")
     )
 }
 
 ## Comparison Server
-comparison <- function(input, output, session, id) {
-    output$table <- renderTable({
-        getComparison(id) %>%
-            select(Rank = rank, Geo = descriz, Valore = obsValue)
-    },
-    include.rownames = F
-    )
+comparison <- function(input, output, session, ind) {
+    
     observeEvent(input$appr, {
+        #browser()
         print("click detected")
-        updateSelectInput(session, "ind", selected = "22")
+        updateSelectInput(session, input$ind, selected = ind)
         updateTabItems(session, "sidebarmenu", "indicatori")
-    }
-    )
+        print(ind)
+        print(input$ind)
+    })  
+    
     output$year <- renderText({
-        lastYear <- getData(id)[[1]] %>% 
+        lastYear <- getData(ind)[[1]] %>% 
             filter(GEO == 'ITH2' & obsValue != 'NA') %>%
             summarise(year = max(obsTime)) %>%
             as.numeric()
         paste0("Anno di riferimento: ", lastYear)
     })
     
+    output$table <- renderTable({
+        getComparison(ind) %>%
+            select(Rank = rank, Geo = descriz, Valore = obsValue)
+    },
+    include.rownames = F
+    )
 }
 ## End Comparison Module
 
 ### Mappe
 
 makeMap <- function() {
+    info <- getGEO()
+    
+    NUTS2_SP@data <- NUTS2_SP@data %>%
+        full_join(info, by = c('NUTS_ID' = 'id'))
+    
+    centroids <- getSpPPolygonsLabptSlots(NUTS2_SP)
     
     leaflet() %>% 
         fitBounds( -2, 35, 12, 55) %>%
-        #addProviderTiles("Stamen.Toner") %>%
-        addPolygons(data = NUTS2, 
+        addPolygons(data = NUTS2_ALL, 
                     weight = 1, 
-                    color = 'grey'
+                    color = "grey"
         ) %>%
         addPolygons(data = NUTS2_SP,
-                    weight = 2,
-                    color = #8B1F3F
+                    weight = 1,
+                    color = "black",
+                    fillColor = "#8B1F3F",
+                    fillOpacity = 0.8,
+                    popup = ~paste0("<b>", Regione, "</b>",
+                                    "<br>",
+                                    NUTS_ID, "\t", Stato)
         )
+    
+    
 }
 
