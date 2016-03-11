@@ -90,6 +90,30 @@ shinyServer(function(input, output, clientData, session) {
     
     observeEvent(
         input$ind,
+        output$rankTable <- DT::renderDataTable(
+            ({
+                data <- data()
+                tab <- rankData(data)
+                tab <- datatable(
+                    tab,
+                    selection = list(mode = "multiple", 
+                                     selected = c(5,6)
+                    ),
+                    #rownames = FALSE,
+                    escape = FALSE,
+                    options = list(
+                        columnDefs = list(
+                            list(orderable = FALSE, 
+                                 title = "*",
+                                 targets = -1)
+                        )
+                    )
+                )
+            })
+        )
+    )
+    observeEvent(
+        input$ind,
         output$title <- renderText(
             name <- getIndName(input$ind)
         )
@@ -97,11 +121,24 @@ shinyServer(function(input, output, clientData, session) {
     
     observeEvent(
         input$ind,
-        output$plot <- renderChart2(
+        output$valuePlot <- renderChart2(
             ({
                 data <- data()
-                p <- makeInteractivePlot(data, input$table_rows_selected)
-                p$addParams(dom = 'plot')
+                p <- valuePlot(data, input$table_rows_selected)
+                p$addParams(dom = 'valuePlot')
+                
+                return(p)
+            })
+        )
+    )
+    
+    observeEvent(
+        input$ind,
+        output$rankPlot <- renderChart2(
+            ({
+                data <- data()
+                p <- rankPlot(data, input$rankTable_rows_selected)
+                p$addParams(dom = 'rankPlot')
                 
                 return(p)
             })
@@ -129,25 +166,57 @@ shinyServer(function(input, output, clientData, session) {
     digits = c(0,0,1,0))  
     
     
-    output$fert <- callModule(comparison, 'fert', 4)
-    output$mortinf <- callModule(comparison, 'mortinf', 5)
-    output$asp <- callModule(comparison, 'asp', 8)
-    output$incr <- callModule(comparison, 'incr', 22)
-    output$tum <- callModule(comparison, 'tum', 10)
-    output$mortinf <- callModule(comparison, 'inc', 11)
-    output$asp <- callModule(comparison, 'cardio', 12)
-    output$incr <- callModule(comparison, 'abb', 13)
-    output$fert <- callModule(comparison, 'terz', 16)
-    output$mortinf <- callModule(comparison, 'unloc', 17)
-    output$asp <- callModule(comparison, 'redfam', 18)
-    output$incr <- callModule(comparison, 'redlav', 20)
-    output$att <- callModule(comparison, 'att', 23)
-    output$incr <- callModule(comparison, 'occ', 24)
-    output$incr <- callModule(comparison, 'disoc', 25)
-    output$incr <- callModule(comparison, 'disocgio', 28)
-    output$incr <- callModule(comparison, 'partt', 29)
+    # output$fert <- callModule(comparison, 'fert', 4)
+    # output$mortinf <- callModule(comparison, 'mortinf', 5)
+    # output$asp <- callModule(comparison, 'asp', 8)
+    # output$incr <- callModule(comparison, 'incr', 22)
+    # output$tum <- callModule(comparison, 'tum', 10)
+    # output$mortinf <- callModule(comparison, 'inc', 11)
+    # output$asp <- callModule(comparison, 'cardio', 12)
+    # output$incr <- callModule(comparison, 'abb', 13)
+    # output$fert <- callModule(comparison, 'terz', 16)
+    # output$mortinf <- callModule(comparison, 'unloc', 17)
+    # output$asp <- callModule(comparison, 'redfam', 18)
+    # output$incr <- callModule(comparison, 'redlav', 20)
+    # output$att <- callModule(comparison, 'att', 23)
+    # output$incr <- callModule(comparison, 'occ', 24)
+    # output$incr <- callModule(comparison, 'disoc', 25)
+    # output$incr <- callModule(comparison, 'disocgio', 28)
+    # output$incr <- callModule(comparison, 'partt', 29)
     
     output$map <- renderLeaflet(makeMap())
     
-})
+    output$tabs <- renderUI({
+        
+        tabs <- lapply(getIndicators(1)$idDataFlow, comparisonUi)
+        #do.call(tabBox, tabs, T)
+    })
     
+    
+    
+    observeEvent(input$appr_4, {
+        #browser()
+        print("click detected")
+        updateSelectInput(session, input$ind, selected = 4)
+        updateTabItems(session, "sidebarmenu", "indicatori")
+        print(4)
+        print(input$ind)
+    })
+    
+    output$year_4 <- renderText({
+        lastYear <- getData(4)[[1]] %>%
+            filter(GEO == 'ITH2' & obsValue != 'NA') %>%
+            summarise(year = max(obsTime)) %>%
+            as.numeric()
+        paste0("Anno di riferimento: ", lastYear)
+    })
+    
+    output$table_4 <- renderTable({
+        getComparison(4) %>%
+            select(Rank = rank, Geo = descriz, Valore = obsValue)
+    },
+    include.rownames = F
+    )
+    
+    
+})

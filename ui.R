@@ -68,33 +68,54 @@ shinyUI(
                         height = 650,
                         tabPanel(
                             'Tabella',
-                            box(title = 'Serie Storica',
-                                collapsible = F,
-                                width = 12,
-                                #height = '100%',
-                                DT::dataTableOutput('table')
+                            conditionalPanel("input.switch % 2 == 0",
+                                             box(title = 'Serie Storica',
+                                                 collapsible = F,
+                                                 width = 12,
+                                                 #height = '100%',
+                                                 DT::dataTableOutput('table')
+                                             )
+                            ),
+                            conditionalPanel("input.switch % 2 == 1",
+                                             box(title = 'Serie Storica',
+                                                 collapsible = F,
+                                                 width = 12,
+                                                 #height = '100%',
+                                                 DT::dataTableOutput('rankTable')
+                                             )
                             ),
                             "*: la variazione fa riferimento all'anno precedente"
                         ),
                         tabPanel(
                             'Grafico',
-                            box(title = 'Grafico',
-                                width = 12,
-                                height = '50%',
-                                collapsible = F,
-                                showOutput('plot', 'highcharts')
+                            conditionalPanel("input.switch % 2 == 0",
+                                             box(title = 'Grafico',
+                                                 width = 12,
+                                                 height = '50%',
+                                                 collapsible = F,
+                                                 showOutput('valuePlot', 'highcharts')
+                                             )
+                            ),
+                            conditionalPanel("input.switch % 2 == 1",
+                                             box(title = 'Grafico',
+                                                 width = 12,
+                                                 height = '50%',
+                                                 collapsible = F,
+                                                 showOutput('rankPlot', 'highcharts')
+                                             )
                             )
                         )
-                    )
+                    ),
+                    actionButton("switch", "Passa a graduatoria")
                 ),
                 tabItem(
                     tabName = 'dashboard',
                     h1('Cruscotto generale'),
                     wellPanel(
-                            selectInput("anno", 
-                                        "Scegli anno:", 
-                                        choices = c(2010,2011,2012,2013,2014),
-                                        selected = 2014)
+                        selectInput("anno", 
+                                    "Scegli anno:", 
+                                    choices = c(2010,2011,2012,2013,2014),
+                                    selected = 2014)
                     ),
                     #actionButton(inputId = "appr", label = "approfondisci"),
                     height = 1500,
@@ -114,47 +135,49 @@ shinyUI(
                     ),                
                     
                     h1("Il benchmarking per settore"),
-                    tabBox(
-                        width = 12,
-                        height = 850, color = 'grey',
-                        tabPanel(id = 'demo',
-                                 width = 12,
-                                 title = 'Demografia',
-                                 comparisonUi('fert', 4),
-                                 comparisonUi('mortinf', 5),
-                                 comparisonUi('asp', 8),
-                                 comparisonUi('incr', 22)
-                        ),
-                        tabPanel(id = 'salu',
-                                 width = 12,
-                                 title = 'Salute',
-                                 comparisonUi('tum', 10),
-                                 comparisonUi('inc', 11),
-                                 comparisonUi('cardio', 12)
-                        ),
-                        tabPanel(id = 'ist',
-                                 width = 12,
-                                 title = 'Istruzione',
-                                 comparisonUi('abb', 13),
-                                 comparisonUi('terz', 16)
-                        ),
-                        tabPanel(id = 'eco',
-                                 width = 12,
-                                 title = 'Economia',
-                                 comparisonUi('unloc', 17),
-                                 comparisonUi('redfam', 18),
-                                 comparisonUi('redlav', 20)
-                        ),
-                        tabPanel(id = 'lav',
-                                 width = 12,
-                                 title = 'Mercato del lavoro',
-                                 comparisonUi('att', 23),
-                                 comparisonUi('occ', 24),
-                                 comparisonUi('disoc', 25),
-                                 comparisonUi('disocgio', 28),
-                                 comparisonUi('partt', 29)
-                        )
-                    )
+                    # tabBox(
+                    #     width = 12,
+                    #     height = 850, color = 'grey',
+                    #     tabPanel(id = 'demo',
+                    #              width = 12,
+                    #              title = 'Demografia',
+                    #              comparisonUi('fert', 4),
+                    #              comparisonUi('mortinf', 5),
+                    #              comparisonUi('asp', 8),
+                    #              comparisonUi('incr', 22)
+                    #     ),
+                    #     tabPanel(id = 'salu',
+                    #              width = 12,
+                    #              title = 'Salute',
+                    #              comparisonUi('tum', 10),
+                    #              comparisonUi('inc', 11),
+                    #              comparisonUi('cardio', 12)
+                    #     ),
+                    #     tabPanel(id = 'ist',
+                    #              width = 12,
+                    #              title = 'Istruzione',
+                    #              comparisonUi('abb', 13),
+                    #              comparisonUi('terz', 16)
+                    #     ),
+                    #     tabPanel(id = 'eco',
+                    #              width = 12,
+                    #              title = 'Economia',
+                    #              comparisonUi('unloc', 17),
+                    #              comparisonUi('redfam', 18),
+                    #              comparisonUi('redlav', 20)
+                    #     ),
+                    #     tabPanel(id = 'lav',
+                    #              width = 12,
+                    #              title = 'Mercato del lavoro',
+                    #              comparisonUi('att', 23),
+                    #              comparisonUi('occ', 24),
+                    #              comparisonUi('disoc', 25),
+                    #              comparisonUi('disocgio', 28),
+                    #              comparisonUi('partt', 29)
+                    #     )
+                    # ),
+                    h1("Test"),
+                        uiOutput("tabs")
                 )
             )
         )

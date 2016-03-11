@@ -146,18 +146,28 @@ getData <- function(id) {
         group_by(obsTime, GEO) %>%
         summarise(obsValue = sum(obsValue)) %>%
         ungroup()
-    return(list(dataz,lastYear,direction))
+    
+    rank <- dataz %>%
+        group_by(obsTime) %>% 
+        mutate(obsValue = min_rank(obsValue)) %>%
+        ungroup()
+    return(list(value = dataz,
+                rank = rank,
+                lastYear,
+                direction
+                )
+           )
 }
 
 ## Transform the data to have vertical year and horizontal Geo
 pivotData <- function(x) {
     
-    data <- x[[1]]
-    dir <- x[[3]]
+    dataz <- x[[1]]
+    dir <- x[[4]]
     img <- "<img src=\"arrow_DIR.svg\" height=\"16\" width = \"16\"></img>"
     
-    if (all(c("GEO", "obsTime", "obsValue") %in% names(data))) {
-        res <- data %>%
+    if (all(c("GEO", "obsTime", "obsValue") %in% names(dataz))) {
+        res <- dataz %>%
             select(GEO, obsTime, obsValue) %>%
             spread(obsTime, obsValue) %>%
             .[, c(1, (ncol(.) - ifelse(ncol(.)>8, 8, ncol(.)-2)):ncol(.))] %>%
@@ -182,6 +192,32 @@ pivotData <- function(x) {
         return(res)
     } else
         cat("c'è stato qualche errore")
+}
+
+rankData <- function(x) {
+    dataz <- x[[2]]
+    img <- "<img src=\"arrow_DIR.svg\" height=\"16\" width = \"16\"></img>"
+    
+    if (all(c("GEO", "obsTime", "obsValue") %in% names(dataz))) {
+        res <- dataz %>%
+            select(GEO, obsTime, obsValue) %>%
+            spread(obsTime, obsValue) %>%
+            .[, c(1, (ncol(.) - ifelse(ncol(.)>8, 8, ncol(.)-2)):ncol(.))] %>%
+            mutate(
+                img = ifelse(
+                    .[, ncol(.)] == .[, ncol(.)-1],
+                    sub("DIR", "equal", img),
+                    ifelse(
+                        .[, ncol(.)] > .[, ncol(.)-1],
+                        sub("DIR", "down_red", img),
+                        sub("DIR", "up_green", img)
+                    )
+                )
+            ) %>%
+            arrange(GEO)
+        
+        return(res)
+    }
 }
 
 ## Helper to obtain the string to insert (manually) in the DB
@@ -280,7 +316,7 @@ getIndName <- function(key) {
 }
 
 ## Build the plot
-makeInteractivePlot <- function(data, selected) {
+valuePlot <- function(data, selected) {
     dataz <- select(data[[1]], GEO, obsValue, obsTime) %>%
         mutate(obsTime = as.numeric(obsTime))
     
@@ -297,14 +333,14 @@ makeInteractivePlot <- function(data, selected) {
         data = dataz,
         type = "line",
         group = "GEO",
-        color = "red",
         radius = 0
     )
     p$chart(zoomType = "xy")
-    p$xAxis(categories = dataz$obsTime,
-            title = list(text = "Anno"))
-    p$yAxis(title = list(text = "Valore",
-                         format = "{point.y:,.0f}"))
+    p$xAxis(title = list(text = "Anno"),
+            categories = dataz$obsTime,
+            tickInterval = 2
+            )
+    p$yAxis(title = list(text = "Valore"))
     p$colors(colors)
     
     selected <- pivotData(data)[selected, 1]
@@ -319,6 +355,51 @@ makeInteractivePlot <- function(data, selected) {
     return(p)
 }
 
+rankPlot <- function(data, selected) {
+    dataz <- select(data[[2]], GEO, obsValue, obsTime) %>%
+        mutate(obsTime = as.numeric(obsTime))
+    
+    colors <- colorRampPalette(
+        c(rgb(0.596,0.2,0.318),
+          rgb(0.667,0.349,0.224),
+          rgb(0.153,0.459,0.325),
+          rgb(0.376,0.592,0.196)
+        )
+    )(12)
+    p <- hPlot(
+        y = "obsValue",
+        x = "obsTime",
+        data = dataz,
+        type = "line",
+        group = "GEO",
+        radius = 0
+    )
+    p$chart(zoomType = "xy")
+    p$xAxis(title = list(text = "Anno"),
+            categories = dataz$obsTime,
+            tickInterval = 2
+            )
+    p$yAxis(title = list(text = "Rank"),
+            reversed = "true",
+            min = 1,
+            max = 12,
+            startOnTick = "false",
+            endOnTick = "false",
+            tickInterval = 1,
+            gridLineWidth = 0.5)
+    p$colors(colors)
+    
+    selected <- pivotData(data)[selected, 1]
+    
+    # Black Magic
+    p$params$series = lapply(seq_along(p$params$series), function(i) {
+        
+        x = p$params$series[[i]]
+        x$visible = x$name %in% selected$GEO
+        return(x)
+    })
+    return(p)
+}
 
 getWholeData <- function() {
     indicators <- getIndicators()
@@ -397,54 +478,54 @@ getComparison <- function(id) {
     df
 }
 
-## Start Comparison Module
-## Comparison UI
-comparisonUi <- function(id, ind) {
-    ns <- NS(id)
-    
-    nome <- tabIndicators %>% 
-        filter(idDataFlow == ind) %>%
-        select(descriz) %>%
-        as.character(.)
-    
-    box(id = id,
-        title = nome,
-        width = 6,
-        solidHeader = T,
-        textOutput(ns("year")),
-        tableOutput(ns("table")),
-        actionButton(ns("appr"), "approfondisci")
-    )
-}
-
-## Comparison Server
-comparison <- function(input, output, session, ind) {
-    
-    observeEvent(input$appr, {
-        #browser()
-        print("click detected")
-        updateSelectInput(session, input$ind, selected = ind)
-        updateTabItems(session, "sidebarmenu", "indicatori")
-        print(ind)
-        print(input$ind)
-    })  
-    
-    output$year <- renderText({
-        lastYear <- getData(ind)[[1]] %>% 
-            filter(GEO == 'ITH2' & obsValue != 'NA') %>%
-            summarise(year = max(obsTime)) %>%
-            as.numeric()
-        paste0("Anno di riferimento: ", lastYear)
-    })
-    
-    output$table <- renderTable({
-        getComparison(ind) %>%
-            select(Rank = rank, Geo = descriz, Valore = obsValue)
-    },
-    include.rownames = F
-    )
-}
-## End Comparison Module
+# ## Start Comparison Module
+# ## Comparison UI
+# comparisonUi <- function(id, ind) {
+#     ns <- NS(id)
+#     
+#     nome <- tabIndicators %>% 
+#         filter(idDataFlow == ind) %>%
+#         select(descriz) %>%
+#         as.character(.)
+#     
+#     box(id = id,
+#         title = nome,
+#         width = 6,
+#         solidHeader = T,
+#         textOutput(ns("year")),
+#         tableOutput(ns("table")),
+#         actionButton(ns("appr"), "approfondisci")
+#     )
+# }
+# 
+# ## Comparison Server
+# comparison <- function(input, output, session, ind) {
+#     
+#     observeEvent(input$appr, {
+#         #browser()
+#         print("click detected")
+#         updateSelectInput(session, input$ind, selected = ind)
+#         updateTabItems(session, "sidebarmenu", "indicatori")
+#         print(ind)
+#         print(input$ind)
+#     })  
+#     
+#     output$year <- renderText({
+#         lastYear <- getData(ind)[[1]] %>% 
+#             filter(GEO == 'ITH2' & obsValue != 'NA') %>%
+#             summarise(year = max(obsTime)) %>%
+#             as.numeric()
+#         paste0("Anno di riferimento: ", lastYear)
+#     })
+#     
+#     output$table <- renderTable({
+#         getComparison(ind) %>%
+#             select(Rank = rank, Geo = descriz, Valore = obsValue)
+#     },
+#     include.rownames = F
+#     )
+# }
+# ## End Comparison Module
 
 ### Mappe
 
@@ -475,3 +556,19 @@ makeMap <- function() {
     
 }
 
+comparisonUi <- function(id) {
+
+    nome <- tabIndicators %>%
+        filter(idDataFlow == id) %>%
+        select(descriz) %>%
+        as.character(.)
+
+    box(id = id,
+        title = nome,
+        width = 6,
+        solidHeader = T,
+        textOutput(paste0("year_", id)),
+        tableOutput(paste0("table_", id)),
+        actionButton(paste0("appr_",id), "approfondisci")
+    )
+}
