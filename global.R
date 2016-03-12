@@ -5,9 +5,6 @@ library(rsdmx)
 library(dplyr)
 library(tidyr)
 
-## library to read form DB
-library(RODBC)
-
 ## libraries for interactive plot, table and map
 library(DT)
 library(rCharts)
@@ -478,54 +475,55 @@ getComparison <- function(id) {
     df
 }
 
-# ## Start Comparison Module
-# ## Comparison UI
-# comparisonUi <- function(id, ind) {
-#     ns <- NS(id)
-#     
-#     nome <- tabIndicators %>% 
-#         filter(idDataFlow == ind) %>%
-#         select(descriz) %>%
-#         as.character(.)
-#     
-#     box(id = id,
-#         title = nome,
-#         width = 6,
-#         solidHeader = T,
-#         textOutput(ns("year")),
-#         tableOutput(ns("table")),
-#         actionButton(ns("appr"), "approfondisci")
-#     )
-# }
-# 
-# ## Comparison Server
-# comparison <- function(input, output, session, ind) {
-#     
+## Start Comparison Module
+## Comparison UI
+comparisonUi <- function(id, ind) {
+    options(ns.sep = "_")
+    ns <- NS(id)
+    
+    nome <- tabIndicators %>% 
+        filter(idDataFlow == ind) %>%
+        select(descriz) %>%
+        as.character(.)
+    
+    box(id = id,
+        title = nome,
+        width = 6,
+        solidHeader = T,
+        textOutput(ns("year")),
+        tableOutput(ns("table")),
+        actionButton(ns("appr"), "approfondisci")
+    )
+}
+
+## Comparison Server
+comparison <- function(input, output, session, ind) {
+    
 #     observeEvent(input$appr, {
-#         #browser()
+#         browser()
 #         print("click detected")
 #         updateSelectInput(session, input$ind, selected = ind)
 #         updateTabItems(session, "sidebarmenu", "indicatori")
 #         print(ind)
 #         print(input$ind)
 #     })  
-#     
-#     output$year <- renderText({
-#         lastYear <- getData(ind)[[1]] %>% 
-#             filter(GEO == 'ITH2' & obsValue != 'NA') %>%
-#             summarise(year = max(obsTime)) %>%
-#             as.numeric()
-#         paste0("Anno di riferimento: ", lastYear)
-#     })
-#     
-#     output$table <- renderTable({
-#         getComparison(ind) %>%
-#             select(Rank = rank, Geo = descriz, Valore = obsValue)
-#     },
-#     include.rownames = F
-#     )
-# }
-# ## End Comparison Module
+    
+    output$year <- renderText({
+        lastYear <- getData(ind)[[1]] %>% 
+            filter(GEO == 'ITH2' & obsValue != 'NA') %>%
+            summarise(year = max(obsTime)) %>%
+            as.numeric()
+        paste0("Anno di riferimento: ", lastYear)
+    })
+    
+    output$table <- renderTable({
+        getComparison(ind) %>%
+            select(Rank = rank, Geo = descriz, Valore = obsValue)
+    },
+    include.rownames = F
+    )
+}
+## End Comparison Module
 
 ### Mappe
 
@@ -556,19 +554,19 @@ makeMap <- function() {
     
 }
 
-comparisonUi <- function(id) {
-
-    nome <- tabIndicators %>%
-        filter(idDataFlow == id) %>%
-        select(descriz) %>%
-        as.character(.)
-
-    box(id = id,
-        title = nome,
-        width = 6,
-        solidHeader = T,
-        textOutput(paste0("year_", id)),
-        tableOutput(paste0("table_", id)),
-        actionButton(paste0("appr_",id), "approfondisci")
-    )
-}
+# comparisonUi <- function(id) {
+# 
+#     nome <- tabIndicators %>%
+#         filter(idDataFlow == id) %>%
+#         select(descriz) %>%
+#         as.character(.)
+# 
+#     box(id = id,
+#         title = nome,
+#         width = 6,
+#         solidHeader = T,
+#         textOutput(paste0("year_", id)),
+#         tableOutput(paste0("table_", id)),
+#         actionButton(paste0("appr_",id), "approfondisci")
+#     )
+# }

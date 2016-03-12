@@ -112,10 +112,11 @@ shinyUI(
                     tabName = 'dashboard',
                     h1('Cruscotto generale'),
                     wellPanel(
-                        selectInput("anno", 
-                                    "Scegli anno:", 
-                                    choices = c(2010,2011,2012,2013,2014),
-                                    selected = 2014)
+#                         selectInput("anno", 
+#                                     "Scegli anno:", 
+#                                     choices = c(2010,2011,2012,2013,2014),
+#                                     selected = 2014)
+                       
                     ),
                     #actionButton(inputId = "appr", label = "approfondisci"),
                     height = 1500,
@@ -135,49 +136,55 @@ shinyUI(
                     ),                
                     
                     h1("Il benchmarking per settore"),
-                    # tabBox(
-                    #     width = 12,
-                    #     height = 850, color = 'grey',
-                    #     tabPanel(id = 'demo',
-                    #              width = 12,
-                    #              title = 'Demografia',
-                    #              comparisonUi('fert', 4),
-                    #              comparisonUi('mortinf', 5),
-                    #              comparisonUi('asp', 8),
-                    #              comparisonUi('incr', 22)
-                    #     ),
-                    #     tabPanel(id = 'salu',
-                    #              width = 12,
-                    #              title = 'Salute',
-                    #              comparisonUi('tum', 10),
-                    #              comparisonUi('inc', 11),
-                    #              comparisonUi('cardio', 12)
-                    #     ),
-                    #     tabPanel(id = 'ist',
-                    #              width = 12,
-                    #              title = 'Istruzione',
-                    #              comparisonUi('abb', 13),
-                    #              comparisonUi('terz', 16)
-                    #     ),
-                    #     tabPanel(id = 'eco',
-                    #              width = 12,
-                    #              title = 'Economia',
-                    #              comparisonUi('unloc', 17),
-                    #              comparisonUi('redfam', 18),
-                    #              comparisonUi('redlav', 20)
-                    #     ),
-                    #     tabPanel(id = 'lav',
-                    #              width = 12,
-                    #              title = 'Mercato del lavoro',
-                    #              comparisonUi('att', 23),
-                    #              comparisonUi('occ', 24),
-                    #              comparisonUi('disoc', 25),
-                    #              comparisonUi('disocgio', 28),
-                    #              comparisonUi('partt', 29)
-                    #     )
-                    # ),
-                    h1("Test"),
-                        uiOutput("tabs")
+                    tabBox(
+                        width = 12,
+                        height = 850, color = 'grey',
+                        tabPanel(id = 'demo',
+                                 width = 12,
+                                 title = 'Demografia',
+                                 #uiOutput("boxes"),
+                                 lapply(getIndicators(1)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
+#                                  comparisonUi('fert', 4),
+#                                  comparisonUi('mortinf', 5),
+#                                  comparisonUi('asp', 8),
+#                                  comparisonUi('incr', 22)
+                        ),
+                        tabPanel(id = 'salu',
+                                 width = 12,
+                                 title = 'Salute',
+                                 lapply(getIndicators(2)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
+#                                  comparisonUi('tum', 10),
+#                                  comparisonUi('inc', 11),
+#                                  comparisonUi('cardio', 12)
+                        ),
+                        tabPanel(id = 'ist',
+                                 width = 12,
+                                 title = 'Istruzione',
+                                 lapply(getIndicators(3)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
+#                                  comparisonUi('abb', 13),
+#                                  comparisonUi('terz', 16)
+                        ),
+                        tabPanel(id = 'eco',
+                                 width = 12,
+                                 title = 'Economia',
+                                 lapply(getIndicators(4)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
+#                                  comparisonUi('unloc', 17),
+#                                  comparisonUi('redfam', 18),
+#                                  comparisonUi('redlav', 20)
+                        ),
+                        tabPanel(id = 'lav',
+                                 width = 12,
+                                 title = 'Mercato del lavoro',
+                                 lapply(getIndicators(5)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
+#                                  comparisonUi('att', 23),
+#                                  comparisonUi('occ', 24),
+#                                  comparisonUi('disoc', 25),
+#                                  comparisonUi('disocgio', 28),
+#                                  comparisonUi('partt', 29)
+                        )
+                    )
+#                     h1("Test"),
+#                         uiOutput("tabs")
                 )
             )
         )
