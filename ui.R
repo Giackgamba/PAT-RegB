@@ -43,11 +43,15 @@ shinyUI(
                                      selected = 1
                                  ),
                                  selectInput(
-                                     "ind",
+                                     "indd",
                                      "Indicatore:",
                                      c("optionA" = "A")
                                  )
                 ),
+                conditionalPanel("1 == 2",
+                                 selectInput("ind",
+                                             "asd",
+                                             getIndicators())),
                 dataTableOutput("NUTS"),
                 leafletOutput("map")
             )

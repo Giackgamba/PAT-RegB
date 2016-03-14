@@ -531,8 +531,7 @@ comparisonUi <- function(id, ind) {
         solidHeader = T,
         textOutput(ns("year")),
         tableOutput(ns("table")),
-        actionButton(ns("sec"), "approfondisci"),
-        actionButton(ns("indd"), "approfondisci 2")
+        actionButton(ns("sec"), "approfondisci")
     )
 }
 

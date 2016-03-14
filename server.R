@@ -50,7 +50,7 @@ shinyServer(function(input, output, clientData, session) {
         input$settore, 
         ({ 
             updateSelectInput(session, 
-                              "ind", 
+                              "indd", 
                               choices = indicators()) 
         })
     )
@@ -60,33 +60,33 @@ shinyServer(function(input, output, clientData, session) {
         getData(input$ind)
     })
     
+    observeEvent(input$indd,
+                 {updateSelectInput(session, "ind", selected = input$indd)})
     
     observeEvent(
         input$ind,
         output$table <- DT::renderDataTable(
             ({
-                data <- data()
-                tab <- pivotData(data)
-                tab <- datatable(
-                    tab,
-                    selection = list(mode = "multiple",
-                                     selected = 6
-                    ),
-                    rownames = FALSE,
-                    escape = FALSE,
-                    options = list(
+                tab <- data() %>%
+                    pivotData() %>%
+                    datatable(
+                        rownames = FALSE,
+                        escape = FALSE,
+                        options = list(selection = list(mode = "multiple",
+                                                        selected = 6
+                        ),
                         columnDefs = list(
                             list(orderable = FALSE, 
                                  title = "*",
                                  targets = -1),
                             list(orderable = FALSE,
                                  title = " ",
-                                 width = "2px",
+                                 width = "20px",
                                  targets = 1
-)
+                            )
                         )
-                    )
-                ) %>%
+                        )
+                    ) %>%
                     formatRound(2:10, 2)
             })
         )
@@ -177,20 +177,10 @@ shinyServer(function(input, output, clientData, session) {
     
     
     ## Function to create multiple "observeEvent"
-    updSector <- function(ind) {
-        assign(paste0("obs",ind),
-               observeEvent(input[[paste0("box_", ind, "-sec")]], {
-                   sec <- getSectorFromId(ind)
-                   updateSelectInput(session, 
-                                     "settore", 
-                                     selected = as.character(sec))
-
-               })  
-        )
-    }
+    
     updInd <- function(ind) {
         assign(paste0("obs2",ind),
-               observeEvent(input[[paste0("box_", ind, "-indd")]], {
+               observeEvent(input[[paste0("box_", ind, "-sec")]], {
                    updateSelectInput(session, 
                                      "ind", 
                                      selected = as.character(ind))
@@ -200,7 +190,7 @@ shinyServer(function(input, output, clientData, session) {
         )
     }
     
-    
+    # For loop to create multiple box each with its observeEvent
     for (a in 1:5){
         box_output_list <- lapply(getIndicators(a)$idDataFlow,
                                   function(i) {
@@ -211,7 +201,6 @@ shinyServer(function(input, output, clientData, session) {
         # Convert the list to a tagList - this is necessary for the list of items
         # to display properly.
         do.call(tagList, box_output_list)
-        lapply(getIndicators(a)$idDataFlow, updSector) 
         lapply(getIndicators(a)$idDataFlow, updInd) 
     }
     
