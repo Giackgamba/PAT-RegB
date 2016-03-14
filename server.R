@@ -70,7 +70,7 @@ shinyServer(function(input, output, clientData, session) {
                 tab <- datatable(
                     tab,
                     selection = list(mode = "multiple",
-                                     selected = c(5,6)
+                                     selected = 6
                     ),
                     rownames = FALSE,
                     escape = FALSE,
@@ -104,7 +104,7 @@ shinyServer(function(input, output, clientData, session) {
                     escape = FALSE,
                     options = list(
                         selection = list(mode = "multiple", 
-                                         selected = c(5,6)
+                                         selected = 6
                         ),
                         columnDefs = list(
                             list(orderable = FALSE, 
@@ -154,7 +154,7 @@ shinyServer(function(input, output, clientData, session) {
     )
     
     output$textBest <- renderTable({
-        res <- getBestTN() %>%
+        res <- getBestTN(input$anno) %>%
             select(Indicatore = ind,
                    Valore = obsValue,
                    Rank = rank) %>%
@@ -164,7 +164,7 @@ shinyServer(function(input, output, clientData, session) {
     digits = c(0,0,1,0))
     
     output$textWorst <- renderTable({
-        res <- getWorstTN() %>%
+        res <- getWorstTN(input$anno) %>%
             select(Indicatore = ind,
                    Valore = obsValue,
                    Rank = rank) %>%
@@ -179,16 +179,23 @@ shinyServer(function(input, output, clientData, session) {
     ## Function to create multiple "observeEvent"
     updSector <- function(ind) {
         assign(paste0("obs",ind),
-               observeEvent(input[[paste0("box_", ind, "-appr")]], {
+               observeEvent(input[[paste0("box_", ind, "-sec")]], {
                    sec <- getSectorFromId(ind)
                    updateSelectInput(session, 
                                      "settore", 
                                      selected = as.character(sec))
+
+               })  
+        )
+    }
+    updInd <- function(ind) {
+        assign(paste0("obs2",ind),
+               observeEvent(input[[paste0("box_", ind, "-indd")]], {
                    updateSelectInput(session, 
                                      "ind", 
                                      selected = as.character(ind))
                    updateTabItems(session, "sidebarmenu", "indicatori")
-
+                   
                })  
         )
     }
@@ -205,6 +212,7 @@ shinyServer(function(input, output, clientData, session) {
         # to display properly.
         do.call(tagList, box_output_list)
         lapply(getIndicators(a)$idDataFlow, updSector) 
+        lapply(getIndicators(a)$idDataFlow, updInd) 
     }
     
 })

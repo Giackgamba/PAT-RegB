@@ -111,13 +111,13 @@ shinyUI(
                 tabItem(
                     tabName = "dashboard",
                     h1("Cruscotto generale"),
-                    wellPanel(
                         selectInput("anno",
                                     "Scegli anno:",
-                                    choices = c(2010,2011,2012,2013,2014),
-                                    selected = 2014),
-                        actionButton("app", "approfondisci")
-                    ),
+                                    choices = c("Ultimo anno disponibile",
+                                                2014, 2013,
+                                                2012, 2011,
+                                                2010),
+                                    selected = ""),
                     height = 1500,
                     fluidRow(
                         box(id = "good",

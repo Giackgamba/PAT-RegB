@@ -146,14 +146,22 @@ getData <- function(id) {
     
     rank <- dataz %>%
         group_by(obsTime) %>% 
-        mutate(obsValue = min_rank(obsValue)) %>%
+        mutate(dir = direction) %>%
+        mutate(obsValue = as.integer(
+            ifelse(dir == "-", 
+                   rank(obsValue), 
+                   rank(desc(obsValue))
+            )
+        ) 
+        ) %>% 
+        select(-dir) %>%
         ungroup()
     return(list(value = dataz,
                 rank = rank,
                 lastYear,
                 direction
-                )
-           )
+    )
+    )
 }
 
 ## Transform the data to have vertical year and horizontal Geo
@@ -351,13 +359,10 @@ valuePlot <- function(data, selected) {
     dataz <- select(data[[1]], GEO, obsValue, obsTime) %>%
         mutate(obsTime = as.numeric(obsTime))
     
-    colors <- colorRampPalette(
-        c(rgb(0.596,0.2,0.318),
-          rgb(0.667,0.349,0.224),
-          rgb(0.153,0.459,0.325),
-          rgb(0.376,0.592,0.196)
-        )
-    )(12)
+    colors <- c("#297957", "#77A337", "#CECE00", "#BF3400",
+                "#242479", "#FF0000", "#0385BD", "#9AAD35",
+                "#C3629D", "#FF8700", "#923262", "#DA7000")
+    
     p <- hPlot(
         y = "obsValue",
         x = "obsTime",
@@ -370,19 +375,19 @@ valuePlot <- function(data, selected) {
     p$xAxis(title = list(text = "Anno"),
             categories = dataz$obsTime,
             tickInterval = 2
-            )
+    )
     p$yAxis(title = list(text = "Valore"))
     p$colors(colors)
     
     selected <- pivotData(data)[selected, 1]
     
     # Black Magic
-    p$params$series = lapply(seq_along(p$params$series), function(i) {
-        
-        x = p$params$series[[i]]
-        x$visible = x$name %in% selected$GEO
-        return(x)
-    })
+    p$params$series = lapply(seq_along(p$params$series), 
+                             function(i) {
+                                 x = p$params$series[[i]]
+                                 x$visible = x$name %in% selected$GEO
+                                 return(x)
+                             })
     return(p)
 }
 
@@ -390,13 +395,10 @@ rankPlot <- function(data, selected) {
     dataz <- select(data[[2]], GEO, obsValue, obsTime) %>%
         mutate(obsTime = as.numeric(obsTime))
     
-    colors <- colorRampPalette(
-        c(rgb(0.596,0.2,0.318),
-          rgb(0.667,0.349,0.224),
-          rgb(0.153,0.459,0.325),
-          rgb(0.376,0.592,0.196)
-        )
-    )(12)
+    colors <- c("#297957", "#77A337", "#CECE00", "#BF3400",
+                "#242479", "#FF0000", "#0385BD", "#9AAD35",
+                "#C3629D", "#FF8700", "#923262", "#DA7000")
+    
     p <- hPlot(
         y = "obsValue",
         x = "obsTime",
@@ -409,7 +411,7 @@ rankPlot <- function(data, selected) {
     p$xAxis(title = list(text = "Anno"),
             categories = dataz$obsTime,
             tickInterval = 2
-            )
+    )
     p$yAxis(title = list(text = "Rank"),
             reversed = "true",
             min = 1,
@@ -447,13 +449,14 @@ getWholeData <- function() {
     return(df)
 }
 
-getRank <- function(id) {
-    direction <- filter(tabIndicators, idDataFlow == id) %>%
-        select(direction) %>%
-        as.character()
+getRank <- function(id, year = "") {
+    
+    data <- getData(id)
+    direction <- data[[4]]
+    year <- ifelse(year == "", data[[3]], year)
     
     df <- getData(id)[[1]] %>%
-        filter(obsTime == max(obsTime)) %>%
+        filter(obsTime == year) %>%
         mutate(dir = direction) %>%
         mutate(rank = as.integer(
             ifelse(dir == "-", 
@@ -465,7 +468,7 @@ getRank <- function(id) {
     df
 }
 
-getBestTN <- function() {
+getBestTN <- function(year = "") {
     indicators <- getIndicators()
     
     df <- do.call(rbind, 
@@ -473,7 +476,8 @@ getBestTN <- function() {
                       indicators, 
                       MARGIN = 1,
                       FUN = function(x){
-                          d <- getRank(as.integer(x["idDataFlow"])) %>%
+                          d <- getRank(as.integer(x["idDataFlow"]),
+                                       year) %>%
                               mutate(ind = x["descriz"]) %>%
                               filter(GEO == "ITH2" & rank<=3) 
                       }
@@ -482,7 +486,7 @@ getBestTN <- function() {
     df
 }
 
-getWorstTN <- function() {
+getWorstTN <- function(year = "") {
     indicators <- getIndicators()
     
     df <- do.call(rbind, 
@@ -490,7 +494,8 @@ getWorstTN <- function() {
                       indicators, 
                       MARGIN = 1,
                       FUN = function(x){
-                          d <- getRank(as.integer(x["idDataFlow"])) %>%
+                          d <- getRank(as.integer(x["idDataFlow"]),
+                                       year) %>%
                               mutate(ind = x["descriz"]) %>%
                               filter(GEO == "ITH2" & rank>=10)
                       }
@@ -499,8 +504,8 @@ getWorstTN <- function() {
     df
 }
 
-getComparison <- function(id) {
-    df <-  getRank(id) %>%
+getComparison <- function(id, year) {
+    df <-  getRank(id,year) %>%
         mutate(ind = id) %>%
         filter(GEO == "ITH2" | rank %in% c(1, 2, nrow(.)-1, nrow(.))) %>%
         inner_join(tabNUTS, by = c("GEO" = "id")) %>%
@@ -526,23 +531,21 @@ comparisonUi <- function(id, ind) {
         solidHeader = T,
         textOutput(ns("year")),
         tableOutput(ns("table")),
-        actionButton(ns("appr"), "approfondisci")
+        actionButton(ns("sec"), "approfondisci"),
+        actionButton(ns("indd"), "approfondisci 2")
     )
 }
 
 ## Comparison Server
 comparison <- function(input, output, session, ind) {
-
+    
     output$year <- renderText({
-        lastYear <- getData(ind)[[1]] %>% 
-            filter(GEO == "ITH2" & obsValue != "NA") %>%
-            summarise(year = max(obsTime)) %>%
-            as.numeric()
+        lastYear <- getData(ind)[[3]]
         paste0("Anno di riferimento: ", lastYear)
     })
     
     output$table <- renderTable({
-        getComparison(ind) %>%
+        getComparison(ind, year = "") %>%
             select(Rank = rank, Geo = descriz, Valore = obsValue)
     },
     include.rownames = F
