@@ -85,7 +85,7 @@ downloadData <- function(id) {
         },
         warning = function(w) {
             print("warning")
-            dataUrl <- sub('MT', 'MT00', dataUrl)
+            dataUrl <- sub("MT", "MT00", dataUrl)
             dataz <- as.data.frame(readSDMX(dataUrl))
             write.csv2(dataz, 
                        paste0("backupData/", 
@@ -107,7 +107,7 @@ getDataOffline <- function(id) {
         stringsAsFactors = F,
         quote = "\""
     )
-    # read.csv2 trasforma le colonne 'T' in booleane
+    # read.csv2 trasforma le colonne "T" in booleane
     # quindi li ritrasformiamo in character
     # (non che quelle colonne siano utilizzate)
     dataz[,sapply(dataz,class) == "logical"] <-
@@ -131,14 +131,14 @@ getData <- function(id) {
     } else dataz <- downloadData(id)
     
     lastYear <- dataz %>% 
-        filter(GEO == 'ITH2' & obsValue != 'NA') %>%
+        filter(GEO == "ITH2" & obsValue != "NA") %>%
         summarise(year = max(obsTime)) %>%
         as.numeric()
     direction <- filter(tabIndicators, idDataFlow == id) %>%
         select(direction) %>%
         as.character()
     dataz <- dataz %>% 
-        filter(obsTime <= lastYear & obsValue != 'NA') %>%
+        filter(obsTime <= lastYear & obsValue != "NA") %>%
         select(obsTime, GEO, obsValue) %>%
         group_by(obsTime, GEO) %>%
         summarise(obsValue = sum(obsValue)) %>%
@@ -161,17 +161,23 @@ pivotData <- function(x) {
     
     dataz <- x[[1]]
     dir <- x[[4]]
+    flag <- "<img src=\"FLAG.svg\" height=\"16\" width = \"16\"></img>"
     img <- "<img src=\"arrow_DIR.svg\" height=\"16\" width = \"16\"></img>"
     
     if (all(c("GEO", "obsTime", "obsValue") %in% names(dataz))) {
         res <- dataz %>%
             select(GEO, obsTime, obsValue) %>%
             spread(obsTime, obsValue) %>%
-            .[, c(1, (ncol(.) - ifelse(ncol(.)>8, 8, ncol(.)-2)):ncol(.))] %>%
+            full_join(select(tabNUTS, id, stato), 
+                      by = c("GEO" = "id")) %>%
+            .[, c(1, 
+                  (ncol(.) - ifelse(ncol(.)>8, 
+                                    8, ncol(.)-2)):ncol(.)
+            )] %>%
             mutate(
                 img = 
                     ifelse(
-                        .[, ncol(.)] > .[, ncol(.)-1],
+                        .[, ncol(.)-1] > .[, ncol(.)-2],
                         ifelse(
                             dir == "+",
                             sub("DIR", "up_green", img),
@@ -184,6 +190,16 @@ pivotData <- function(x) {
                         )
                     )
             ) %>%
+            mutate(
+                stato = paste0(
+                    "<img src=\"",
+                    stato,
+                    ".png\" height=\"18\" width = \"18\" alt = \"",
+                    stato,
+                    "\"></img>"
+                )
+            ) %>%
+            select(GEO, stato, starts_with("20"), img) %>%
             arrange(GEO)
         
         return(res)
@@ -199,18 +215,30 @@ rankData <- function(x) {
         res <- dataz %>%
             select(GEO, obsTime, obsValue) %>%
             spread(obsTime, obsValue) %>%
+            full_join(select(tabNUTS, id, stato), 
+                      by = c("GEO" = "id")) %>%
             .[, c(1, (ncol(.) - ifelse(ncol(.)>8, 8, ncol(.)-2)):ncol(.))] %>%
             mutate(
                 img = ifelse(
-                    .[, ncol(.)] == .[, ncol(.)-1],
+                    .[, ncol(.)-1] == .[, ncol(.)-2],
                     sub("DIR", "equal", img),
                     ifelse(
-                        .[, ncol(.)] > .[, ncol(.)-1],
+                        .[, ncol(.)-1] > .[, ncol(.)-2],
                         sub("DIR", "down_red", img),
                         sub("DIR", "up_green", img)
                     )
                 )
+            )  %>%
+            mutate(
+                stato = paste0(
+                    "<img src=\"",
+                    stato,
+                    ".png\" height=\"18\" width = \"18\" alt = \"",
+                    stato,
+                    "\"></img>"
+                )
             ) %>%
+            select(GEO, stato, starts_with("20"), img) %>%
             arrange(GEO)
         
         return(res)
@@ -250,6 +278,12 @@ getSectors <- function() {
     }
     
     return(options)
+}
+
+getSectorFromId <- function(id) {
+    sector <- tabIndicators %>%
+        filter(idDataFlow == id)
+    return(sector$idSettore)
 }
 
 ## Read the NUTS list
@@ -439,9 +473,9 @@ getBestTN <- function() {
                       indicators, 
                       MARGIN = 1,
                       FUN = function(x){
-                          d <- getRank(as.integer(x['idDataFlow'])) %>%
-                              mutate(ind = x['descriz']) %>%
-                              filter(GEO == 'ITH2' & rank<=3) 
+                          d <- getRank(as.integer(x["idDataFlow"])) %>%
+                              mutate(ind = x["descriz"]) %>%
+                              filter(GEO == "ITH2" & rank<=3) 
                       }
                   )
     )
@@ -456,9 +490,9 @@ getWorstTN <- function() {
                       indicators, 
                       MARGIN = 1,
                       FUN = function(x){
-                          d <- getRank(as.integer(x['idDataFlow'])) %>%
-                              mutate(ind = x['descriz']) %>%
-                              filter(GEO == 'ITH2' & rank>=10)
+                          d <- getRank(as.integer(x["idDataFlow"])) %>%
+                              mutate(ind = x["descriz"]) %>%
+                              filter(GEO == "ITH2" & rank>=10)
                       }
                   )
     )
@@ -468,8 +502,8 @@ getWorstTN <- function() {
 getComparison <- function(id) {
     df <-  getRank(id) %>%
         mutate(ind = id) %>%
-        filter(GEO == 'ITH2' | rank %in% c(1, 2, nrow(.)-1, nrow(.))) %>%
-        inner_join(tabNUTS, by = c('GEO' = 'id')) %>%
+        filter(GEO == "ITH2" | rank %in% c(1, 2, nrow(.)-1, nrow(.))) %>%
+        inner_join(tabNUTS, by = c("GEO" = "id")) %>%
         select(rank, descriz, obsValue) %>%
         arrange(rank)
     df
@@ -498,19 +532,10 @@ comparisonUi <- function(id, ind) {
 
 ## Comparison Server
 comparison <- function(input, output, session, ind) {
-    
-#     observeEvent(input$appr, {
-#         browser()
-#         print("click detected")
-#         updateSelectInput(session, input$ind, selected = ind)
-#         updateTabItems(session, "sidebarmenu", "indicatori")
-#         print(ind)
-#         print(input$ind)
-#     })  
-    
+
     output$year <- renderText({
         lastYear <- getData(ind)[[1]] %>% 
-            filter(GEO == 'ITH2' & obsValue != 'NA') %>%
+            filter(GEO == "ITH2" & obsValue != "NA") %>%
             summarise(year = max(obsTime)) %>%
             as.numeric()
         paste0("Anno di riferimento: ", lastYear)
@@ -531,7 +556,7 @@ makeMap <- function() {
     info <- getGEO()
     
     NUTS2_SP@data <- NUTS2_SP@data %>%
-        full_join(info, by = c('NUTS_ID' = 'id'))
+        full_join(info, by = c("NUTS_ID" = "id"))
     
     centroids <- getSpPPolygonsLabptSlots(NUTS2_SP)
     
@@ -553,20 +578,3 @@ makeMap <- function() {
     
     
 }
-
-# comparisonUi <- function(id) {
-# 
-#     nome <- tabIndicators %>%
-#         filter(idDataFlow == id) %>%
-#         select(descriz) %>%
-#         as.character(.)
-# 
-#     box(id = id,
-#         title = nome,
-#         width = 6,
-#         solidHeader = T,
-#         textOutput(paste0("year_", id)),
-#         tableOutput(paste0("table_", id)),
-#         actionButton(paste0("appr_",id), "approfondisci")
-#     )
-# }

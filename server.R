@@ -9,7 +9,7 @@ library(shiny)
 library(rCharts)
 library(DT)
 library(dplyr)
-source('global.R')
+source("global.R")
 
 options(
     DT.options = list(
@@ -42,20 +42,19 @@ shinyServer(function(input, output, clientData, session) {
         )  %>%
             formatStyle(
                 columns = 1:3, 
-                backgroundColor = '#222D32'
+                backgroundColor = "#222D32"
             )
     )
     
     observeEvent(
         input$settore, 
         ({ 
-            updateSelectInput(session, 'ind', choices = indicators()) 
+            updateSelectInput(session, 
+                              "ind", 
+                              choices = indicators()) 
         })
     )
     
-    id <- reactive({
-        getId(input$ind)
-    })
     
     data <- reactive({
         getData(input$ind)
@@ -70,19 +69,25 @@ shinyServer(function(input, output, clientData, session) {
                 tab <- pivotData(data)
                 tab <- datatable(
                     tab,
-#                     selection = list(mode = "multiple", 
-#                                      selected = c(5,6)
-#                     ),
-                    #rownames = FALSE,
+                    selection = list(mode = "multiple",
+                                     selected = c(5,6)
+                    ),
+                    rownames = FALSE,
                     escape = FALSE,
                     options = list(
                         columnDefs = list(
                             list(orderable = FALSE, 
                                  title = "*",
-                                 targets = -1)
+                                 targets = -1),
+                            list(orderable = FALSE,
+                                 title = " ",
+                                 width = "2px",
+                                 targets = 1
+)
                         )
                     )
-                )
+                ) %>%
+                    formatRound(2:10, 2)
             })
         )
     )
@@ -95,8 +100,7 @@ shinyServer(function(input, output, clientData, session) {
                 tab <- rankData(data)
                 tab <- datatable(
                     tab,
-
-                    #rownames = FALSE,
+                    rownames = FALSE,
                     escape = FALSE,
                     options = list(
                         selection = list(mode = "multiple", 
@@ -105,7 +109,11 @@ shinyServer(function(input, output, clientData, session) {
                         columnDefs = list(
                             list(orderable = FALSE, 
                                  title = "*",
-                                 targets = -1)
+                                 targets = -1),
+                            list(orderable = FALSE,
+                                 title = " ",
+                                 width = "2px",
+                                 targets = 1)
                         )
                     )
                 )
@@ -125,7 +133,7 @@ shinyServer(function(input, output, clientData, session) {
             ({
                 data <- data()
                 p <- valuePlot(data, input$table_rows_selected)
-                p$addParams(dom = 'valuePlot')
+                p$addParams(dom = "valuePlot")
                 
                 return(p)
             })
@@ -138,7 +146,7 @@ shinyServer(function(input, output, clientData, session) {
             ({
                 data <- data()
                 p <- rankPlot(data, input$rankTable_rows_selected)
-                p$addParams(dom = 'rankPlot')
+                p$addParams(dom = "rankPlot")
                 
                 return(p)
             })
@@ -165,53 +173,40 @@ shinyServer(function(input, output, clientData, session) {
     include.rownames = F,
     digits = c(0,0,1,0))  
     
-    
-#     output$box_4 <- callModule(comparison, 'box_4', 4)
-#     output$box_5 <- callModule(comparison, 'box_5', 5)
-#     output$asp <- callModule(comparison, 'asp', 8)
-#     output$incr <- callModule(comparison, 'incr', 22)
-#     output$tum <- callModule(comparison, 'tum', 10)
-#     output$mortinf <- callModule(comparison, 'inc', 11)
-#     output$asp <- callModule(comparison, 'cardio', 12)
-#     output$incr <- callModule(comparison, 'abb', 13)
-#     output$fert <- callModule(comparison, 'terz', 16)
-#     output$mortinf <- callModule(comparison, 'unloc', 17)
-#     output$asp <- callModule(comparison, 'redfam', 18)
-#     output$incr <- callModule(comparison, 'redlav', 20)
-#     output$att <- callModule(comparison, 'att', 23)
-#     output$incr <- callModule(comparison, 'occ', 24)
-#     output$incr <- callModule(comparison, 'disoc', 25)
-#     output$incr <- callModule(comparison, 'disocgio', 28)
-#     output$incr <- callModule(comparison, 'partt', 29)
-    
     output$map <- renderLeaflet(makeMap())
     
-  
-#     out <- function(number) {
-#         assign(output[[paste0("box_", number)]],
-#                callModule(comparison, paste0("box_", number), number))
-#     }
-#     lapply(getIndicators(1)$idDataFlow, out)
     
-    obs <- function(number) {
-        assign(paste0("obs",number),
-               observeEvent(input[[paste0("box_", number, "-appr")]], {
-                   updateSelectInput(session, "ind", selected = number)
+    ## Function to create multiple "observeEvent"
+    updSector <- function(ind) {
+        assign(paste0("obs",ind),
+               observeEvent(input[[paste0("box_", ind, "-appr")]], {
+                   sec <- getSectorFromId(ind)
+                   updateSelectInput(session, 
+                                     "settore", 
+                                     selected = as.character(sec))
+                   updateSelectInput(session, 
+                                     "ind", 
+                                     selected = as.character(ind))
                    updateTabItems(session, "sidebarmenu", "indicatori")
+
                })  
         )
     }
-      for (a in 1:5){
-        box_output_list <- lapply(getIndicators(a)$idDataFlow, function(i) {
-            callModule(comparison, paste0("box_", i), i)
-        })
+    
+    
+    for (a in 1:5){
+        box_output_list <- lapply(getIndicators(a)$idDataFlow,
+                                  function(i) {
+                                      callModule(comparison, 
+                                                 paste0("box_", i), 
+                                                 i)
+                                  })
         # Convert the list to a tagList - this is necessary for the list of items
         # to display properly.
         do.call(tagList, box_output_list)
-        lapply(getIndicators(a)$idDataFlow, obs) 
-        }
-    
-    
-
+        lapply(getIndicators(a)$idDataFlow, updSector) 
+    }
     
 })
+
+

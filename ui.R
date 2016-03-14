@@ -9,7 +9,7 @@ library(shiny)
 library(shinydashboard)
 require(rCharts)
 library(DT)
-source('global.R')
+source("global.R")
 
 sectors <- getSectors()
 
@@ -26,14 +26,14 @@ shinyUI(
         dashboardSidebar(
             width = 380,
             sidebarMenu(
-                id = 'sidebarmenu',
-                menuItem('Cruscotto generale',
-                         tabName = 'dashboard',
-                         icon = icon('dashboard')
+                id = "sidebarmenu",
+                menuItem("Cruscotto generale",
+                         tabName = "dashboard",
+                         icon = icon("dashboard")
                 ),
-                menuItem('Indicatori',
-                         tabName = 'indicatori',
-                         icon = icon('line-chart')
+                menuItem("Indicatori",
+                         tabName = "indicatori",
+                         icon = icon("line-chart")
                 ),
                 conditionalPanel("input.sidebarmenu == 'indicatori'",
                                  selectInput(
@@ -43,12 +43,12 @@ shinyUI(
                                      selected = 1
                                  ),
                                  selectInput(
-                                     'ind',
-                                     'Indicatore:',
-                                     c('optionA' = 'A')
+                                     "ind",
+                                     "Indicatore:",
+                                     c("optionA" = "A")
                                  )
                 ),
-                dataTableOutput('NUTS'),
+                dataTableOutput("NUTS"),
                 leafletOutput("map")
             )
         ),
@@ -61,47 +61,47 @@ shinyUI(
             ),
             tabItems(
                 tabItem(
-                    tabName = 'indicatori',
-                    h1(textOutput('title')),
+                    tabName = "indicatori",
+                    h1(textOutput("title")),
                     tabBox(
                         width = 12,
                         height = 650,
                         tabPanel(
-                            'Tabella',
+                            "Tabella",
                             conditionalPanel("input.switch % 2 == 0",
-                                             box(title = 'Serie Storica',
+                                             box(title = "Serie Storica",
                                                  collapsible = F,
                                                  width = 12,
-                                                 #height = '100%',
-                                                 DT::dataTableOutput('table')
+                                                 #height = "100%",
+                                                 DT::dataTableOutput("table")
                                              )
                             ),
                             conditionalPanel("input.switch % 2 == 1",
-                                             box(title = 'Serie Storica',
+                                             box(title = "Serie Storica",
                                                  collapsible = F,
                                                  width = 12,
-                                                 #height = '100%',
-                                                 DT::dataTableOutput('rankTable')
+                                                 #height = "100%",
+                                                 DT::dataTableOutput("rankTable")
                                              )
                             ),
                             "*: la variazione fa riferimento all'anno precedente"
                         ),
                         tabPanel(
-                            'Grafico',
+                            "Grafico",
                             conditionalPanel("input.switch % 2 == 0",
-                                             box(title = 'Grafico',
+                                             box(title = "Grafico",
                                                  width = 12,
-                                                 height = '50%',
+                                                 height = "50%",
                                                  collapsible = F,
-                                                 showOutput('valuePlot', 'highcharts')
+                                                 showOutput("valuePlot", "highcharts")
                                              )
                             ),
                             conditionalPanel("input.switch % 2 == 1",
-                                             box(title = 'Grafico',
+                                             box(title = "Grafico",
                                                  width = 12,
-                                                 height = '50%',
+                                                 height = "50%",
                                                  collapsible = F,
-                                                 showOutput('rankPlot', 'highcharts')
+                                                 showOutput("rankPlot", "highcharts")
                                              )
                             )
                         )
@@ -109,82 +109,77 @@ shinyUI(
                     actionButton("switch", "Passa a graduatoria")
                 ),
                 tabItem(
-                    tabName = 'dashboard',
-                    h1('Cruscotto generale'),
+                    tabName = "dashboard",
+                    h1("Cruscotto generale"),
                     wellPanel(
-#                         selectInput("anno", 
-#                                     "Scegli anno:", 
-#                                     choices = c(2010,2011,2012,2013,2014),
-#                                     selected = 2014)
-                       
+                        selectInput("anno",
+                                    "Scegli anno:",
+                                    choices = c(2010,2011,2012,2013,2014),
+                                    selected = 2014),
+                        actionButton("app", "approfondisci")
                     ),
-                    #actionButton(inputId = "appr", label = "approfondisci"),
                     height = 1500,
                     fluidRow(
-                        box(id = 'good',
+                        box(id = "good",
                             width = 6,
-                            title = 'Dove andiamo bene:',
+                            title = "Dove andiamo bene:",
                             solidHeader = T,
-                            tableOutput('textBest')
+                            tableOutput("textBest")
                         ),
-                        box(id = 'bad',
+                        box(id = "bad",
                             width = 6,
-                            title = 'Dove andiamo male:',
+                            title = "Dove andiamo male:",
                             solidHeader = T,
-                            tableOutput('textWorst')
+                            tableOutput("textWorst")
                         )
                     ),                
                     
                     h1("Il benchmarking per settore"),
                     tabBox(
+                        id = "sectors",
                         width = 12,
-                        height = 850, color = 'grey',
-                        tabPanel(id = 'demo',
+                        height = 850, color = "grey",
+                        tabPanel(id = "demo",
                                  width = 12,
-                                 title = 'Demografia',
-                                 #uiOutput("boxes"),
-                                 lapply(getIndicators(1)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
-#                                  comparisonUi('fert', 4),
-#                                  comparisonUi('mortinf', 5),
-#                                  comparisonUi('asp', 8),
-#                                  comparisonUi('incr', 22)
+                                 title = "Demografia",
+                                 lapply(getIndicators(1)$idDataFlow, 
+                                        function(x) {
+                                            comparisonUi(paste0("box_", x), x)
+                                            })
                         ),
-                        tabPanel(id = 'salu',
+                        tabPanel(id = "salu",
                                  width = 12,
-                                 title = 'Salute',
-                                 lapply(getIndicators(2)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
-#                                  comparisonUi('tum', 10),
-#                                  comparisonUi('inc', 11),
-#                                  comparisonUi('cardio', 12)
+                                 title = "Salute",
+                                 lapply(getIndicators(2)$idDataFlow, 
+                                        function(x) {
+                                            comparisonUi(paste0("box_", x), x)
+                                            })
                         ),
-                        tabPanel(id = 'ist',
+                        tabPanel(id = "ist",
                                  width = 12,
-                                 title = 'Istruzione',
-                                 lapply(getIndicators(3)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
-#                                  comparisonUi('abb', 13),
-#                                  comparisonUi('terz', 16)
+                                 title = "Istruzione",
+                                 lapply(getIndicators(3)$idDataFlow, 
+                                        function(x) {
+                                            comparisonUi(paste0("box_", x), x)
+                                            })
                         ),
-                        tabPanel(id = 'eco',
+                        tabPanel(id = "eco",
                                  width = 12,
-                                 title = 'Economia',
-                                 lapply(getIndicators(4)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
-#                                  comparisonUi('unloc', 17),
-#                                  comparisonUi('redfam', 18),
-#                                  comparisonUi('redlav', 20)
+                                 title = "Economia",
+                                 lapply(getIndicators(4)$idDataFlow, 
+                                        function(x) {
+                                            comparisonUi(paste0("box_", x), x)
+                                            })
                         ),
-                        tabPanel(id = 'lav',
+                        tabPanel(id = "lav",
                                  width = 12,
-                                 title = 'Mercato del lavoro',
-                                 lapply(getIndicators(5)$idDataFlow, function(x) {comparisonUi(paste0("box_", x), x)})
-#                                  comparisonUi('att', 23),
-#                                  comparisonUi('occ', 24),
-#                                  comparisonUi('disoc', 25),
-#                                  comparisonUi('disocgio', 28),
-#                                  comparisonUi('partt', 29)
+                                 title = "Lavoro",
+                                 lapply(getIndicators(5)$idDataFlow, 
+                                        function(x) {
+                                            comparisonUi(paste0("box_", x), x)
+                                            })
                         )
                     )
-#                     h1("Test"),
-#                         uiOutput("tabs")
                 )
             )
         )
