@@ -7,6 +7,7 @@
 
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
 require(rCharts)
 library(DT)
 source("global.R")
@@ -58,6 +59,7 @@ shinyUI(
         ),
         
         dashboardBody(
+            useShinyjs(),
             tags$head(
                 tags$link(rel = "stylesheet", 
                           type = "text/css", 
@@ -110,7 +112,7 @@ shinyUI(
                             )
                         )
                     ),
-                actionButton("switch", "Passa a graduatoria")
+                actionButton("switch", "Vedi graduatoria")
                 ),
                 tabItem(
                     tabName = "dashboard",

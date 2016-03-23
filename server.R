@@ -9,6 +9,7 @@ library(shiny)
 library(rCharts)
 library(DT)
 library(dplyr)
+library(shinyjs)
 source("global.R")
 
 options(
@@ -70,6 +71,13 @@ shinyServer(function(input, output, clientData, session) {
         sel <- input$table_rows_selected
     })
     
+    observeEvent(input$switch, {
+        if(!is.null(input$switch)){
+            if(input$switch%%2 == 0) html("switch", "Vedi graduatoria")
+            else html("switch", "Vedi valori")
+        }
+    })
+    
     observeEvent(input$indd,
                  {updateSelectInput(session, "ind", selected = input$indd)})
     
@@ -85,9 +93,10 @@ shinyServer(function(input, output, clientData, session) {
                         selection = list(
                             mode = "multiple",
                             selected = 6),
-                        extensions = list(FixedColumns = list(
-                            leftColumns = 2,
-                            rightColumns = 2)),
+                        extensions = list(
+                            FixedColumns = list(
+                                leftColumns = 2)
+                        ),
                         options = list(
                             scrollX = TRUE,
                             columnDefs = list(
@@ -117,9 +126,10 @@ shinyServer(function(input, output, clientData, session) {
                     tab,
                     rownames = FALSE,
                     escape = FALSE,
-                    extensions = list(FixedColumns = list(
-                        leftColumns = 2,
-                        rightColumns = 2)),
+                    extensions = list(
+                        FixedColumns = list(
+                            leftColumns = 2)
+                    ),
                     selection = list(
                         mode = "multiple",
                         selected = 6),
