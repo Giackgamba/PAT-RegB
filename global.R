@@ -124,7 +124,7 @@ getData <- function(id) {
     file <- paste0("backupData/", key, "-", id, ".csv")
     if (file.exists(file)) {
         old <-
-            difftime(Sys.time(), file.info(file)$mtime, units = "days") > 1000
+            difftime(Sys.time(), file.info(file)$mtime, units = "days") > 100
         if (!old)
             dataz <- getDataOffline(id)
         else dataz <- downloadData(id)
@@ -192,9 +192,13 @@ pivotData <- function(x) {
                             sub("DIR", "up_red", img)
                         ),
                         ifelse(
-                            dir == "+",
-                            sub("DIR", "down_red", img),
-                            sub("DIR", "down_green", img)
+                            .[, ncol(.)-1] == .[, ncol(.)-2],
+                            sub("DIR", "equal", img),
+                            ifelse(
+                                dir == "+",
+                                sub("DIR", "down_red", img),
+                                sub("DIR", "down_green", img)
+                            )
                         )
                     )
             ) %>%
@@ -313,7 +317,8 @@ getGEO <- function() {
                 stato,
                 "\"></img>"
             ),
-            Regione = descriz
+            Regione = descriz,
+            link = wiki
             
         )
     return(filters)
@@ -453,7 +458,9 @@ getRank <- function(id, year = "") {
     
     data <- getData(id)
     direction <- data[[4]]
-    year <- ifelse(year == "", data[[3]], year)
+    year <- ifelse(year == "Ultimo anno disponibile", 
+                   data[[3]], 
+                   year)
     
     df <- getData(id)[[1]] %>%
         filter(obsTime == year) %>%
@@ -470,7 +477,6 @@ getRank <- function(id, year = "") {
 
 getBestTN <- function(year = "") {
     indicators <- getIndicators()
-    
     df <- do.call(rbind, 
                   apply(
                       indicators, 
@@ -544,8 +550,8 @@ comparison <- function(input, output, session, ind) {
     })
     
     output$table <- renderTable({
-        getComparison(ind, year = "") %>%
-            select(Rank = rank, Geo = descriz, Valore = obsValue)
+        getComparison(ind, year = getData(ind)[[3]]) %>%
+            select(Posizione = rank, Regione = descriz, Valore = obsValue)
     },
     include.rownames = F
     )
@@ -560,8 +566,6 @@ makeMap <- function() {
     NUTS2_SP@data <- NUTS2_SP@data %>%
         full_join(info, by = c("NUTS_ID" = "id"))
     
-    centroids <- getSpPPolygonsLabptSlots(NUTS2_SP)
-    
     leaflet() %>% 
         fitBounds( -2, 35, 12, 55) %>%
         addPolygons(data = NUTS2_ALL, 
@@ -575,7 +579,9 @@ makeMap <- function() {
                     fillOpacity = 0.8,
                     popup = ~paste0("<b>", Regione, "</b>",
                                     "<br>",
-                                    NUTS_ID, "\t", Stato)
+                                    NUTS_ID, "\t", Stato,
+                                    "<br>",
+                                    "<a href=\"", link, "\">Link Wikipedia</a>")
         )
     
     

@@ -110,7 +110,7 @@ shinyUI(
                             )
                         )
                     ),
-                    actionButton("switch", "Passa a graduatoria")
+                actionButton("switch", "Passa a graduatoria")
                 ),
                 tabItem(
                     tabName = "dashboard",
@@ -120,8 +120,8 @@ shinyUI(
                                     choices = c("Ultimo anno disponibile",
                                                 2014, 2013,
                                                 2012, 2011,
-                                                2010),
-                                    selected = ""),
+                                                2010)
+                                    ),
                     height = 1500,
                     fluidRow(
                         box(id = "good",

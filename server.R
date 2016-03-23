@@ -35,10 +35,16 @@ shinyServer(function(input, output, clientData, session) {
     
     
     output$NUTS <- renderDataTable(
-        datatable(
-            getGEO(),
-            escape = FALSE,
-            rownames = FALSE
+        datatable(getGEO() %>%
+                      mutate(
+                          id,
+                          Stato,
+                          Regione =  paste0("<a href=\"", 
+                                            link, "\">", 
+                                            Regione, "</a>")) %>%
+                      select(-link),
+                  escape = FALSE,
+                  rownames = FALSE
         )  %>%
             formatStyle(
                 columns = 1:3, 
@@ -60,6 +66,10 @@ shinyServer(function(input, output, clientData, session) {
         getData(input$ind)
     })
     
+    selected <- reactive({
+        sel <- input$table_rows_selected
+    })
+    
     observeEvent(input$indd,
                  {updateSelectInput(session, "ind", selected = input$indd)})
     
@@ -72,22 +82,27 @@ shinyServer(function(input, output, clientData, session) {
                     datatable(
                         rownames = FALSE,
                         escape = FALSE,
-                        options = list(selection = list(mode = "multiple",
-                                                        selected = 6
-                        ),
-                        columnDefs = list(
-                            list(orderable = FALSE, 
-                                 title = "*",
-                                 targets = -1),
-                            list(orderable = FALSE,
-                                 title = " ",
-                                 width = "20px",
-                                 targets = 1
+                        selection = list(
+                            mode = "multiple",
+                            selected = 6),
+                        extensions = list(FixedColumns = list(
+                            leftColumns = 2,
+                            rightColumns = 2)),
+                        options = list(
+                            scrollX = TRUE,
+                            columnDefs = list(
+                                list(orderable = FALSE,
+                                     title = "*",
+                                     targets = -1),
+                                list(orderable = FALSE,
+                                     title = " ",
+                                     width = "20px",
+                                     targets = 1
+                                )
                             )
                         )
-                        )
                     ) %>%
-                    formatRound(2:10, 2)
+                    formatRound(2:10, 1)
             })
         )
     )
@@ -102,18 +117,23 @@ shinyServer(function(input, output, clientData, session) {
                     tab,
                     rownames = FALSE,
                     escape = FALSE,
+                    extensions = list(FixedColumns = list(
+                        leftColumns = 2,
+                        rightColumns = 2)),
+                    selection = list(
+                        mode = "multiple",
+                        selected = 6),
                     options = list(
-                        selection = list(mode = "multiple", 
-                                         selected = 6
-                        ),
+                        scrollX = TRUE,
                         columnDefs = list(
                             list(orderable = FALSE, 
                                  title = "*",
                                  targets = -1),
                             list(orderable = FALSE,
                                  title = " ",
-                                 width = "2px",
-                                 targets = 1)
+                                 width = "20px",
+                                 targets = 1
+                            )
                         )
                     )
                 )
@@ -157,21 +177,23 @@ shinyServer(function(input, output, clientData, session) {
         res <- getBestTN(input$anno) %>%
             select(Indicatore = ind,
                    Valore = obsValue,
-                   Rank = rank) %>%
+                   Rank = rank,
+                   Anno = obsTime) %>%
             arrange(Rank)
     },
     include.rownames = F,
-    digits = c(0,0,1,0))
+    digits = c(0,0,1,0,0))
     
     output$textWorst <- renderTable({
         res <- getWorstTN(input$anno) %>%
             select(Indicatore = ind,
                    Valore = obsValue,
-                   Rank = rank) %>%
+                   Rank = rank,
+                   Anno = obsTime) %>%
             arrange(desc(Rank))
     },
     include.rownames = F,
-    digits = c(0,0,1,0))  
+    digits = c(0,0,1,0,0))  
     
     output$map <- renderLeaflet(makeMap())
     
@@ -203,6 +225,7 @@ shinyServer(function(input, output, clientData, session) {
         do.call(tagList, box_output_list)
         lapply(getIndicators(a)$idDataFlow, updInd) 
     }
+    
     
 })
 
