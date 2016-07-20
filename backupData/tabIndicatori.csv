@@ -1,19 +1,15 @@
 idDataFlow;idSettore;nome;descriz;concepts;direction
-4;1;demo_r_frate2;Tasso di fertilita';FREQ.AGE;+
-5;1;demo_r_minfind;Tasso di mortalita' infantile;FREQ;-
-8;1;demo_r_mlifexp;Aspettativa di vita a 65 anni;FREQ.SEX.AGE;+
-10;2;hlth_cd_acdr;Tasso di mortalita' per tumore;FREQ.UNIT.SEX.AGE.ICD10;-
-11;2;hlth_cd_acdr;Tasso di mortalita' per incidenti;FREQ.UNIT.SEX.AGE.ICD10;-
-12;2;hlth_cd_acdr;Tasso di mortalita' per malattie cardio-circolatorie;FREQ.UNIT.SEX.AGE.ICD10;-
-13;3;edat_lfse_16;Abbandoni precoci del sistema scolastico;FREQ.UNIT.SEX.AGE;-
-16;3;edat_lfse_12;Popolazione 30-34 anni con diploma di istruzione terziaria;FREQ.SEX.ISCED11.AGE.UNIT;+
-17;4;sbs_r_nuts06_r2;Unita' locali;FREQ.NACE_R2.INDIC_SB;+
-18;4;nama_10r_2hhinc;Reddito disponibile delle famiglie;FREQ.UNIT.NA_ITEM;+
-20;4;nama_10r_2coe;Redditi da lavoro dipendente;FREQ.CURRENCY.NACE_R2;+
-22;1;demo_r_gind3;Tasso di incremento naturale;FREQ.INDIC_DE;+
-23;5;lfst_r_lfp2actrt;Tasso di attivita' (15-64 anni);FREQ.UNIT.SEX.AGE;+
-24;5;lfst_r_lfe2emprt;Tasso di occupazione (15-64 anni);FREQ.UNIT.SEX.AGE;+
-25;5;lfst_r_lfu3rt;Tasso di disoccupazione (15+ anni);FREQ.UNIT.AGE.SEX;-
-28;5;lfst_r_lfu3rt;Tasso di disoccupazione giovanile;FREQ.UNIT.AGE.SEX;-
-29;5;lfst_r_lfe2eftpt;Occupati part-time;FREQ.UNIT.SEX.WORKTIME;+
-30;4;nama_10r_2gdp;Pil procapite in PPS;FREQ.UNIT;+
+4;2;demo_r_d3dens;Densita di popolazione;A;+
+5;2;demo_r_frate2;Tasso di fertilita;A.TOTAL;+
+6;2;demo_r_mlifexp;Aspettativa di vita alla nascita;A.T.Y_LT1;+
+7;3;educ_regind;Tasso di partecipazione in istruzione secondaria;A.R05_2;+
+8;3;edat_lfse_22;NEET tasso(15-24);A.T.Y15-24.NO_FED_NFE.NEMP.PC;-
+9;3;educ_regind;Percentuale di studenti su popolazione;A.R04_4;+
+10;4;lfst_r_lfe2emprt;Tasso di occupazione (15+);A.PC.T.Y_GE15;+
+11;4;lfst_r_lfu3rt;Tasso di disoccupazione(15+);A.PC.Y_GE15.T;-
+12;4;lfst_r_lfe2ehour;Media numero di ore lavorate;A.HR.Y_GE15.T;+
+16;6;tour_occ_nin2;Notti spese in strutture turistiche;A.B006.P_THAB.I551-I553;+
+17;6;tour_cap_nuts2;Percentuale di variazione numero di strutture;A.A001.PCH_PRE.I551-I553;+
+25;9;isoc_r_iacc_h;Percentuale di famiglie con accesso a internet;A.H_IACC.PC_HH;+
+26;9;isoc_r_gov_i;Individui che hanno usato internet per rapporti con pubblica amministrazione;A.I_IUGOV12.PC_IND;+
+27;9;isoc_r_cux_i;Individui che non hanno mai usato il computer;A.I_CUX.PC_IND;-

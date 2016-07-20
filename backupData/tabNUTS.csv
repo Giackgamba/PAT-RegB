@@ -1,13 +1,15 @@
-"id";"descriz";"stato";"wiki"
-"AT32";"Salzburg";"Austria";"https://it.wikipedia.org/wiki/Salisburghese"
-"AT33";"Tirol";"Austria";"https://it.wikipedia.org/wiki/Tirolo_(Austria)"
-"BE22";"Prov. Limburg (BE)";"Belgium";"https://it.wikipedia.org/wiki/Limburgo_(regione)"
-"ES13";"Cantabria";"Spain";"https://it.wikipedia.org/wiki/Cantabria"
-"ITH1";"Provincia di Bolzano/Bozen";"Italy";"https://it.wikipedia.org/wiki/Provincia_autonoma_di_Bolzano"
-"ITH2";"Provincia di Trento";"Italy";"https://it.wikipedia.org/wiki/Provincia_autonoma_di_Trento"
-"MT";"Malta";"Malta";"https://it.wikipedia.org/wiki/Malta"
-"NL12";"Friesland (NL)";"Netherlands";"https://it.wikipedia.org/wiki/Frisia_(Paesi_Bassi)"
-"NL13";"Drenthe";"Netherlands";"https://it.wikipedia.org/wiki/Drenthe"
-"NL34";"Zeeland";"Netherlands";"https://it.wikipedia.org/wiki/Zelanda"
-"UKC1";"Tees Valley and Durham";"United-kingdom";"https://it.wikipedia.org/wiki/Durham_(contea)"
-"UKE2";"North Yorkshire";"United-kingdom";"https://it.wikipedia.org/wiki/North_Yorkshire"
+id;descriz;stato;wiki
+ITH2;Trentino;Italy;
+ITH1;Alto-Adige;Italy;
+ITC4;Lombardia;Italy;
+ITH3;Veneto;Italy;
+AT34;Voralberg;Austria;
+AT33;Tirolo;Austria;
+AT32;Salisburgo;Austria;
+DE2;Baviera;Austria;
+ITH;Nord-Est;Italy;
+IT;Italia;Italy;
+EU27;Europe-27;Europe;
+EU28;Europe-28;Europe;
+EAA;Euro Area;Europe;
+CH07;Ticino;Switzerland;

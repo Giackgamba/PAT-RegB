@@ -1,9 +1,6 @@
-"idSettore";"descriz"
-1;"Demografia"
-2;"Salute"
-3;"Istruzione"
-4;"Economia"
-5;"Lavoro"
-6;"Turismo"
-7;"Innovazione"
-8;"Ambiente"
+idSettore;descriz
+2;Popolazione
+3;Istruzione e formazione
+4;Mercato del lavoro
+6;Turismo
+9;Società dell'informazione

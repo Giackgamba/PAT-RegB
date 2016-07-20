@@ -41,7 +41,7 @@ shinyUI(
                                      "settore",
                                      "Settore:",
                                      sectors, 
-                                     selected = 1
+                                     selected = 2
                                  ),
                                  selectInput(
                                      "indd",
@@ -52,7 +52,9 @@ shinyUI(
                 conditionalPanel("1 == 2",
                                  selectInput("ind",
                                              "asd",
-                                             getIndicators())),
+                                             getIndicators()
+                                 )
+                ),
                 dataTableOutput("NUTS"),
                 leafletOutput("map")
             )
@@ -112,18 +114,18 @@ shinyUI(
                             )
                         )
                     ),
-                actionButton("switch", "Vedi graduatoria")
+                    actionButton("switch", "Vedi graduatoria")
                 ),
                 tabItem(
                     tabName = "dashboard",
                     h1("Cruscotto generale"),
-                        selectInput("anno",
-                                    "Scegli anno:",
-                                    choices = c("Ultimo anno disponibile",
-                                                2014, 2013,
-                                                2012, 2011,
-                                                2010)
-                                    ),
+                    selectInput("anno",
+                                "Scegli anno:",
+                                choices = c("Ultimo anno disponibile",
+                                            2015, 2014, 
+                                            2013, 2012, 
+                                            2011, 2010)
+                    ),
                     height = 1500,
                     fluidRow(
                         box(id = "good",
@@ -138,52 +140,59 @@ shinyUI(
                             solidHeader = T,
                             tableOutput("textWorst")
                         )
-                    ),                
-                    
-                    h1("Il benchmarking per settore"),
-                    tabBox(
-                        id = "sectors",
-                        width = 12,
-                        height = 850, color = "grey",
-                        tabPanel(id = "demo",
-                                 width = 12,
-                                 title = "Demografia",
-                                 lapply(getIndicators(1)$idDataFlow, 
-                                        function(x) {
-                                            comparisonUi(paste0("box_", x), x)
+                    ),
+                    fluidRow(
+                        h1("Il benchmarking per settore"),
+                        tabBox(
+                            id = "sectors",
+                            width = 12,
+                            height = 850, 
+                            color = "grey",
+                            # selected = "Popolazione",
+                            # tabPanel(id="fuck",
+                            #          title = ""
+                            # ),
+                            tabPanel(id = "ist",
+                                     width = 12,
+                                     title = "Istruzione e formazione",
+                                     
+                                     lapply(getIndicators(3)$idDataFlow,
+                                            function(x) {
+                                                comparisonUi(paste0("box_", x), x)
                                             })
-                        ),
-                        tabPanel(id = "salu",
-                                 width = 12,
-                                 title = "Salute",
-                                 lapply(getIndicators(2)$idDataFlow, 
-                                        function(x) {
-                                            comparisonUi(paste0("box_", x), x)
+                            ),                            tabPanel(id = "demo",
+                                     width = 12,
+                                     title = "Popolazione",
+                                     lapply(getIndicators(2)$idDataFlow,
+                                            function(x) {
+                                                comparisonUi(paste0("box_", x), x)
                                             })
-                        ),
-                        tabPanel(id = "ist",
-                                 width = 12,
-                                 title = "Istruzione",
-                                 lapply(getIndicators(3)$idDataFlow, 
-                                        function(x) {
-                                            comparisonUi(paste0("box_", x), x)
+                            ),
+
+                            tabPanel(id = "lav",
+                                     width = 12,
+                                     title = "Mercato del lavoro",
+                                     lapply(getIndicators(4)$idDataFlow,
+                                            function(x) {
+                                                comparisonUi(paste0("box_", x), x)
                                             })
-                        ),
-                        tabPanel(id = "eco",
-                                 width = 12,
-                                 title = "Economia",
-                                 lapply(getIndicators(4)$idDataFlow, 
-                                        function(x) {
-                                            comparisonUi(paste0("box_", x), x)
+                            ),
+                            tabPanel(id = "tur",
+                                     width = 12,
+                                     title = "Turismo",
+                                     lapply(getIndicators(6)$idDataFlow,
+                                            function(x) {
+                                                comparisonUi(paste0("box_", x), x)
                                             })
-                        ),
-                        tabPanel(id = "lav",
-                                 width = 12,
-                                 title = "Lavoro",
-                                 lapply(getIndicators(5)$idDataFlow, 
-                                        function(x) {
-                                            comparisonUi(paste0("box_", x), x)
+                            ),
+                            tabPanel(id = "its",
+                                     width = 12,
+                                     title = "Società dell'informazione",
+                                     lapply(getIndicators(9)$idDataFlow,
+                                            function(x) {
+                                                comparisonUi(paste0("box_", x), x)
                                             })
+                            )
                         )
                     )
                 )

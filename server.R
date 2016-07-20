@@ -15,7 +15,7 @@ source("global.R")
 options(
     DT.options = list(
         server = FALSE,
-        pageLength = 12,
+        pageLength = 14,
         processing = TRUE,
         escape = FALSE,
         rownames = FALSE,
@@ -29,7 +29,7 @@ options(
 shinyServer(function(input, output, clientData, session) {
     
     sectors <- getSectors()
-    geoFilter <- getGEOFilters()
+    #geoFilter <- getGEOFilters()
     indicators <- reactive({ 
         getIndicatorsList(input$settore) 
     })
@@ -53,6 +53,15 @@ shinyServer(function(input, output, clientData, session) {
             )
     )
     
+    data <- reactive({
+        getData(input$ind)
+    })
+    
+    selected <- reactive({
+        sel <- input$table_rows_selected
+    })
+    
+    
     observeEvent(
         input$settore, 
         ({ 
@@ -62,15 +71,6 @@ shinyServer(function(input, output, clientData, session) {
         })
     )
     
-    
-    data <- reactive({
-        getData(input$ind)
-    })
-    
-    selected <- reactive({
-        sel <- input$table_rows_selected
-    })
-    
     observeEvent(input$switch, {
         if(!is.null(input$switch)){
             if(input$switch%%2 == 0) html("switch", "Vedi graduatoria")
@@ -79,7 +79,9 @@ shinyServer(function(input, output, clientData, session) {
     })
     
     observeEvent(input$indd,
-                 {updateSelectInput(session, "ind", selected = input$indd)})
+                 {
+                     updateSelectInput(session, "ind", selected = input$indd)
+                 })
     
     observeEvent(
         input$ind,
@@ -150,6 +152,7 @@ shinyServer(function(input, output, clientData, session) {
             })
         )
     )
+    
     observeEvent(
         input$ind,
         output$title <- renderText(
@@ -183,27 +186,29 @@ shinyServer(function(input, output, clientData, session) {
         )
     )
     
-    output$textBest <- renderTable({
-        res <- getBestTN(input$anno) %>%
-            select(Indicatore = ind,
-                   Valore = obsValue,
-                   Rank = rank,
-                   Anno = obsTime) %>%
-            arrange(Rank)
-    },
-    include.rownames = F,
-    digits = c(0,0,1,0,0))
+    output$textBest <- renderTable(
+        {
+            res <- getBestTN(input$anno) %>%
+                select(Indicatore = ind,
+                       Valore = obsValue,
+                       Rank = rank,
+                       Anno = obsTime) %>%
+                arrange(Rank)
+        },
+        include.rownames = F,
+        digits = c(0,0,1,0,0))
     
-    output$textWorst <- renderTable({
-        res <- getWorstTN(input$anno) %>%
-            select(Indicatore = ind,
-                   Valore = obsValue,
-                   Rank = rank,
-                   Anno = obsTime) %>%
-            arrange(desc(Rank))
-    },
-    include.rownames = F,
-    digits = c(0,0,1,0,0))  
+    output$textWorst <- renderTable(
+        {
+            res <- getWorstTN(input$anno) %>%
+                select(Indicatore = ind,
+                       Valore = obsValue,
+                       Rank = rank,
+                       Anno = obsTime) %>%
+                arrange(desc(Rank))
+        },
+        include.rownames = F,
+        digits = c(0,0,1,0,0))
     
     output$map <- renderLeaflet(makeMap())
     
@@ -212,29 +217,33 @@ shinyServer(function(input, output, clientData, session) {
     
     updInd <- function(ind) {
         assign(paste0("obs2",ind),
-               observeEvent(input[[paste0("box_", ind, "-sec")]], {
-                   updateSelectInput(session, 
-                                     "ind", 
-                                     selected = as.character(ind))
-                   updateTabItems(session, "sidebarmenu", "indicatori")
-                   
-               })  
+               observeEvent(input[[paste0("box_", ind, "-sec")]], 
+                            {
+                                updateSelectInput(session,
+                                                  "ind",
+                                                  selected = as.character(ind))
+                                updateTabItems(session, "sidebarmenu", "indicatori")
+                                
+                            }
+               )
         )
     }
     
     # For loop to create multiple box each with its observeEvent
-    for (a in 1:5){
+    for (a in c(2,3,4,6,9)){
         box_output_list <- lapply(getIndicators(a)$idDataFlow,
                                   function(i) {
-                                      callModule(comparison, 
-                                                 paste0("box_", i), 
+                                      callModule(comparison,
+                                                 paste0("box_", i),
                                                  i)
                                   })
         # Convert the list to a tagList - this is necessary for the list of items
         # to display properly.
         do.call(tagList, box_output_list)
-        lapply(getIndicators(a)$idDataFlow, updInd) 
+        
+        lapply(getIndicators(a)$idDataFlow, updInd)
     }
+    
     
     
 })

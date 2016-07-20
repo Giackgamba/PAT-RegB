@@ -18,8 +18,8 @@ library(rgdal)
 tabIndicators <-
     read.csv2("backupData/tabIndicatori.csv", stringsAsFactors = F)
 tabNUTS <- read.csv2("backupData/tabNUTS.csv", stringsAsFactors = F)
-tabConcepts <-
-    read.csv2("backupData/tabConcepts.csv", stringsAsFactors = F)
+# tabConcepts <-
+#     read.csv2("backupData/tabConcepts.csv", stringsAsFactors = F)
 tabSettori <-
     read.csv2("backupData/tabSettori.csv", stringsAsFactors = F)
 
@@ -30,6 +30,8 @@ NUTS2 <- readOGR("Shapefile/NUTS_RG_10M_2013.shp",
                  stringsAsFactors = F)
 NUTS2_ALL <- subset(NUTS2, NUTS2@data$STAT_LEVL_ == 2)
 NUTS2_SP <- subset(NUTS2, NUTS2@data$NUTS_ID %in% tabNUTS$id)
+
+# totalCombOfGEO <- unlist(sapply(length(getGEOFilters()):1, function(i) combn(length(getGEOFilters()), i, simplify = F)), recursive = F)
 
 ## Get the ind key, from ind id
 getKey <- function(id) {
@@ -65,10 +67,11 @@ downloadCodeList <- function(id, concept) {
 }
 
 ## Download the data, given the filter
-downloadData <- function(id) {
+downloadData <- function(id, geoF) {
     BaseUrl <- "http://ec.europa.eu/eurostat/SDMX/diss-web/rest/data"
     key <- getKey(id)
-    filter <- paste0(getFilters(id), ".", getGEOFilters(), ".")
+    geoFilter <- getGEOFilters(id)
+    filter <- paste0(getFilters(id), ".", geoFilter, ".")
     dataUrl <- paste(BaseUrl,
                      key,
                      filter,
@@ -76,7 +79,7 @@ downloadData <- function(id) {
     tryCatch(
         {
             dataz <- as.data.frame(readSDMX(dataUrl))
-            print("primo try")
+            print(dataUrl)
             write.csv2(dataz, 
                        paste0("backupData/", 
                               key, "-", 
@@ -93,6 +96,12 @@ downloadData <- function(id) {
                               id, ".csv"), 
                        row.names = F)
             
+        },
+        error = function(e) {
+            print(paste0("error: ", e))
+            
+            print(dataUrl)
+            downloadData(id, geoF)
         }
     )
     
@@ -122,16 +131,17 @@ getDataOffline <- function(id) {
 getData <- function(id) {
     key <- getKey(id)
     file <- paste0("backupData/", key, "-", id, ".csv")
+    #geoFilter <- getGEOFilters()
     if (file.exists(file)) {
         old <-
-            difftime(Sys.time(), file.info(file)$mtime, units = "days") > 100
+            difftime(Sys.time(), file.info(file)$mtime, units = "days") > 10
         if (!old)
             dataz <- getDataOffline(id)
-        else dataz <- downloadData(id)
-    } else dataz <- downloadData(id)
+        else dataz <- downloadData(id, totalCombOfGEO)
+    } else dataz <- downloadData(id, totalCombOfGEO)
     
     lastYear <- dataz %>% 
-        filter(GEO == "ITH2" & obsValue != "NA") %>%
+        filter(GEO == "ITH2" & obsValue != "NA" & !is.na(obsValue)) %>%
         summarise(year = max(obsTime)) %>%
         as.numeric()
     direction <- filter(tabIndicators, idDataFlow == id) %>%
@@ -274,8 +284,8 @@ getId <- function(key) {
 
 ## Retrive the filter values
 getFilters <- function(id) {
-    concepts <- filter(tabConcepts, idDataFlow == id) %>%
-        select(value) %>%
+    concepts <- filter(tabIndicators, idDataFlow == id) %>%
+        select(concepts) %>%
         unlist() %>%
         paste0(collapse = ".")
     return(concepts)
@@ -299,12 +309,42 @@ getSectorFromId <- function(id) {
 }
 
 ## Read the NUTS list
-getGEOFilters <- function() {
-    filters <- select(tabNUTS, id) %>%
+getGEOFilters <- function(id) {
+    
+    DataFlowId <- getKey(id)
+    
+    dsd <- readSDMX(providerId = "ESTAT", 
+                    resource = "datastructure",
+                    resourceId = sprintf("DSD_%s", DataFlowId))
+    
+    # Estrai da struttura dati le regioni disponibili
+    GEO <- as.data.frame(
+        slot(dsd, "codelists"),
+        codelistId = "CL_GEO")
+    
+    # Crea stringa con filtro GEO
+    GEOcomm <- semi_join(tabNUTS, GEO) %>%
+        select(id) %>%
         unlist() %>%
-        paste0(collapse = "+")
-    return(filters)
+        paste0(collapse = '+')
+    
+    
 }
+
+# fixGEOFilters <- function(geoF, totalCombOfGEO) {
+#     
+#     
+#     if(identical(a, as.integer(target))) {
+#         print(a)
+#     }
+#     
+#     else {
+#         totalCombOfGEO[[1]] <- NULL
+#         #print("boo")
+#         findTarget(totalCombOfGEO[[1]], target, totalCombOfGEO)
+#     }
+#     
+# }
 
 ## Read the NUTS for the table in sidebar
 getGEO <- function() {
@@ -462,7 +502,7 @@ getRank <- function(id, year = "") {
                    data[[3]], 
                    year)
     
-    df <- getData(id)[[1]] %>%
+    df <- data[[1]] %>%
         filter(obsTime == year) %>%
         mutate(dir = direction) %>%
         mutate(rank = as.integer(
@@ -494,7 +534,7 @@ getBestTN <- function(year = "") {
 
 getWorstTN <- function(year = "") {
     indicators <- getIndicators()
-    
+
     df <- do.call(rbind, 
                   apply(
                       indicators, 
@@ -511,7 +551,7 @@ getWorstTN <- function(year = "") {
 }
 
 getComparison <- function(id, year) {
-    df <-  getRank(id,year) %>%
+    df <-  getRank(id, year) %>%
         mutate(ind = id) %>%
         filter(GEO == "ITH2" | rank %in% c(1, 2, nrow(.)-1, nrow(.))) %>%
         inner_join(tabNUTS, by = c("GEO" = "id")) %>%
@@ -564,7 +604,7 @@ makeMap <- function() {
     info <- getGEO()
     
     NUTS2_SP@data <- NUTS2_SP@data %>%
-        full_join(info, by = c("NUTS_ID" = "id"))
+        inner_join(info, by = c("NUTS_ID" = "id"))
     
     leaflet() %>% 
         fitBounds( -2, 35, 12, 55) %>%
